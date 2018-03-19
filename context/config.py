@@ -1,0 +1,155 @@
+fpr_path = '~/Data/fpr_filtered.tsv.gz'
+sp_path = '~/Data/LIMS/sp_miso_prod_rc6_latest.json'
+lp_path = '~/Data/LIMS/lp_miso_prod_rc6_latest.json'
+provider_id = 'pinery-miso'
+out_dir = '~/Data/update_records/'
+data_context_file_path='/tmp/context.pkl'
+
+selectors = {'study-title': 'CYT'}
+
+rules_file = '~/config/rules.json'
+
+annotations = {'skip': 'invalid analysis',
+               'delete': 'invalid analysis'}
+
+filter_config = {'study-title': 'studyTitle'}
+
+log_level = 'DEBUG'
+
+fpr_header = ['Last Modified', 'Study Title', 'Study SWID', 'Study Attributes', 'Experiment Name', 'Experiment SWID',
+              'Experiment Attributes', 'Root Sample Name', 'Root Sample SWID', 'Parent Sample Name',
+              'Parent Sample SWID', 'Parent Sample Organism IDs', 'Parent Sample Attributes', 'Sample Name',
+              'Sample SWID', 'Sample Organism ID', 'Sample Organism Code', 'Sample Attributes', 'Sequencer Run Name',
+              'Sequencer Run SWID', 'Sequencer Run Attributes', 'Sequencer Run Platform ID',
+              'Sequencer Run Platform Name', 'Lane Name', 'Lane Number', 'Lane SWID', 'Lane Attributes', 'IUS Tag',
+              'IUS SWID', 'IUS Attributes', 'Workflow Name', 'Workflow Version', 'Workflow SWID', 'Workflow Attributes',
+              'Workflow Run Name', 'Workflow Run Status', 'Workflow Run SWID', 'Workflow Run Attributes',
+              'Workflow Run Input File SWAs', 'Processing Algorithm', 'Processing SWID', 'Processing Attributes',
+              'Processing Status', 'File Meta-Type', 'File SWID', 'File Attributes', 'File Path', 'File Md5sum',
+              'File Size', 'File Description', 'Path Skip', 'Skip', 'Status', 'Status Reason', 'LIMS IUS SWID',
+              'LIMS Provider', 'LIMS ID', 'LIMS Version', 'LIMS Last Modified']
+
+fpr_to_provenance_map_str = """{
+    "Study Title": "studyTitle",
+    "Sequencer Run Name": "sequencerRunName",
+    "Lane Number": "laneNumber",
+    "Sequencer Run Platform Name": "sequencerRunPlatformModel",
+    "Root Sample Name": "rootSampleName",
+    "Parent Sample Name": "parentSampleName",
+    "Sample Name": "sampleName",
+    "IUS Tag": "iusTag",
+    "Sample Attributes.geo_external_name": "sampleAttributes.geo_external_name",
+    "Sample Attributes.geo_group_id": "sampleAttributes.geo_group_id",
+    "Sample Attributes.geo_group_id_description": "sampleAttributes.geo_group_id_description",
+    "Sample Attributes.geo_library_source_template_type": "sampleAttributes.geo_library_source_template_type",
+    "Sample Attributes.geo_nanodrop_concentration": "sampleAttributes.geo_nanodrop_concentration",
+    "Sample Attributes.geo_organism": "sampleAttributes.geo_organism",      
+    "Sample Attributes.geo_prep_kit": "sampleAttributes.geo_prep_kit",
+    "Sample Attributes.geo_purpose": "sampleAttributes.geo_purpose",
+    "Sample Attributes.geo_qubit_concentration": "sampleAttributes.geo_qubit_concentration",
+    "Sample Attributes.geo_receive_date": "sampleAttributes.geo_receive_date",
+    "Sample Attributes.geo_run_id_and_position": "sampleAttributes.geo_run_id_and_position",
+    "Sample Attributes.geo_str_result": "sampleAttributes.geo_str_result",
+    "Sample Attributes.geo_targeted_resequencing": "sampleAttributes.geo_targeted_resequencing",
+    "Sample Attributes.geo_template_type": "sampleAttributes.geo_template_type",
+    "Sample Attributes.geo_tissue_origin": "sampleAttributes.geo_tissue_origin",
+    "Sample Attributes.geo_tissue_preparation": "sampleAttributes.geo_tissue_preparation",
+    "Sample Attributes.geo_tissue_region": "sampleAttributes.geo_tissue_region",
+    "Sample Attributes.geo_tissue_type": "sampleAttributes.geo_tissue_type",
+    "Parent Sample Attributes.geo_external_name": "sampleAttributes.geo_external_name",
+    "Parent Sample Attributes.geo_group_id": "sampleAttributes.geo_group_id",
+    "Parent Sample Attributes.geo_group_id_description": "sampleAttributes.geo_group_id_description",
+    "Parent Sample Attributes.geo_library_source_template_type": "sampleAttributes.geo_library_source_template_type",
+    "Parent Sample Attributes.geo_nanodrop_concentration": "sampleAttributes.geo_nanodrop_concentration",
+    "Parent Sample Attributes.geo_organism": "sampleAttributes.geo_organism",
+    "Parent Sample Attributes.geo_prep_kit": "sampleAttributes.geo_prep_kit",
+    "Parent Sample Attributes.geo_purpose": "sampleAttributes.geo_purpose",
+    "Parent Sample Attributes.geo_qubit_concentration": "sampleAttributes.geo_qubit_concentration",
+    "Parent Sample Attributes.geo_receive_date": "sampleAttributes.geo_receive_date",
+    "Parent Sample Attributes.geo_run_id_and_position": "sampleAttributes.geo_run_id_and_position",
+    "Parent Sample Attributes.geo_str_result": "sampleAttributes.geo_str_result",
+    "Parent Sample Attributes.geo_targeted_resequencing": "sampleAttributes.geo_targeted_resequencing",
+    "Parent Sample Attributes.geo_template_type": "sampleAttributes.geo_template_type",
+    "Parent Sample Attributes.geo_tissue_origin": "sampleAttributes.geo_tissue_origin",
+    "Parent Sample Attributes.geo_tissue_preparation": "sampleAttributes.geo_tissue_preparation",
+    "Parent Sample Attributes.geo_tissue_region": "sampleAttributes.geo_tissue_region",
+    "Parent Sample Attributes.geo_tissue_type": "sampleAttributes.geo_tissue_type",
+    "LIMS Version":"version",
+    "LIMS ID": "provenanceId",
+    "LIMS Last Modified": "lastModified",
+    "LIMS Provider": "provider",
+    "Sequencer Run Attributes.instrument_name":"sequencerRunAttributes.instrument_name",
+    "Sequencer Run Attributes.run_dir":"sequencerRunAttributes.run_dir"
+}
+"""
+
+sp_ignore_fields = ['skip',
+                    'createdDate']
+
+lp_ignore_fields = ['skip',
+                    'createdDate']
+
+fpr_ignore_fields = ['Sample Attributes.run_yielded_SE_read',
+                     'Sample Attributes.geo_template_id',
+                     'Sample Attributes.geo_tube_id',
+                     'Sample Attributes.geo_run_id_and_position_and_slot',
+                     'Sample Attributes.geo_qpcr_percentage_human',
+                     'Parent Sample Attributes.geo_run_id_and_position_and_slot',
+                     'Parent Sample Attributes.geo_template_id',
+                     'Parent Sample Attributes.run_yielded_SE_read',
+                     'Parent Sample Attributes.geo_qpcr_percentage_human',
+                     'Parent Sample Attributes.geo_reaction_id',
+                     'Parent Sample Attributes.geo_tube_id',
+                     'Sequencer Run Attributes.IndxRd_1',
+                     'Sequencer Run Attributes.geo_instrument_run_id',
+                     'Lane Attributes.geo_lane',
+                     'Study Attributes.geo_lab_group_id',
+                     'Workflow Run Attributes',
+                     'Workflow Attributes',
+                     'Workflow Run SWID',
+                     'Workflow Version',
+                     'File Path',
+                     'Experiment Name',
+                     'File SWID',
+                     'Parent Sample SWID',
+                     'Root Sample SWID',
+                     'Parent Sample Organism IDs',
+                     'Sample Attributes.geo_reaction_id',
+                     'Study SWID',
+                     'Processing SWID',
+                     'Workflow Name',
+                     'Workflow Run Status',
+                     'File Attributes',
+                     'Path Skip',
+                     'File Meta-Type',
+                     'Skip',
+                     'File Size',
+                     'Status',
+                     'Sequencer Run SWID',
+                     'LIMS IUS SWID',
+                     'Processing Algorithm',
+                     'Processing Attributes',
+                     'IUS Attributes',
+                     'Status Reason',
+                     'Sample Organism ID',
+                     'File Md5sum',
+                     'Experiment SWID',
+                     'Lane SWID',
+                     'Processing Status',
+                     'Workflow Run Name',
+                     'Workflow Run Attributes',
+                     'Last Modified',
+                     'Lane Name',
+                     'Experiment Attributes',
+                     'Sample Organism Code',
+                     'IUS SWID',
+                     'Workflow SWID',
+                     'File Description',
+                     'Sample SWID',
+                     'Workflow Run Input File SWAs',
+                     'Sequencer Run Platform ID',
+                     'Sample Attributes.skip',
+                     'Sequencer Run Attributes.skip',
+                     'Parent Sample Attributes.skip',
+                     'Lane Attributes.skip'
+                     ]
