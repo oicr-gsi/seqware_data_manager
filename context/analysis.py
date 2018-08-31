@@ -69,7 +69,7 @@ class UpdateLimsKeyContext:
 
     def to_sql(self, out_dir):
         current_lims_keys = self.from_table
-        new_lims_keys = self.from_table
+        new_lims_keys = self.to_table
 
         sql = ''
         sql += 'BEGIN;\n\n'
