@@ -1,3 +1,4 @@
+import gzip
 import logging
 import pickle
 
@@ -10,14 +11,14 @@ class BaseContext:
     def save(self, file_path):
         self._log.info('Saving {} to {}'.format(self.__class__.__name__, file_path))
         ctx_file = getpath(file_path)
-        with ctx_file.open("wb") as f:
+        with gzip.GzipFile(ctx_file, "wb") as f:
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
 
     @classmethod
     def load(cls, file_path):
         ctx_file = getpath(file_path)
         cls._log.info('Loading {} from {}'.format(cls.__name__, ctx_file))
-        with ctx_file.open("rb") as f:
+        with gzip.GzipFile(ctx_file, "rb") as f:
             ctx = pickle.load(f)
             if isinstance(ctx, cls):
                 return ctx
