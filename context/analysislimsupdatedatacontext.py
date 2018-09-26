@@ -1,6 +1,8 @@
+import pandas as pd
+
 from context.basecontext import BaseContext
 from utils.analysis import get_fp_with_lims_provenance, get_changes, generate_workflow_run_hierarchy
-import pandas as pd
+
 
 class AnalysisLimsUpdateDataContext(BaseContext):
 
@@ -20,14 +22,18 @@ class AnalysisLimsUpdateDataContext(BaseContext):
         return cls(fpr_with_lims_provenance, changes, wfr_hierarchy)
 
     def filter(self, filters: dict):
+        self._log.info('Applying filters: {}'.format(filters))
         select_mask = pd.Series(True, index=self.fpr.index)
         for key, values in filters.items():
             key_mask = False
-            # key = config.filter_config[k]
             for value in values.split(','):
                 key_mask = key_mask | (self.fpr[key] == value)
-                select_mask = select_mask & key_mask
+            select_mask = select_mask & key_mask
 
         filtered_fpr = self.fpr[select_mask]
-        filtered_changes = self.changes[self.changes.index.isin(self.fpr.index)]
+        filtered_changes = self.changes[self.changes.index.isin(filtered_fpr.index)]
+        self._log.info('Selected {}/{} records ({}/{} changes)'.format(len(filtered_fpr),
+                                                                       len(self.fpr),
+                                                                       len(filtered_changes),
+                                                                       len(self.changes)))
         return self.__class__(filtered_fpr, filtered_changes, self.hierarchy)

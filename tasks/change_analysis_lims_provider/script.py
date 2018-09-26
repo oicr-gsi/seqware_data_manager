@@ -28,7 +28,8 @@ else:
                                                         provider=config.provider,
                                                         file_provenance_path=config.file_provenance_path)
 ## filter data
-ctx = ctx.filter(config.filters)
+if(config.filters):
+    ctx = ctx.filter(config.filters)
 
 ## generate changes
 change_ctx = ChangeContext.generate_and_apply_rules(ctx, config.rules_path)
