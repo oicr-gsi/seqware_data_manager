@@ -1,10 +1,13 @@
-import pandas as pd
+import logging
+
 import numpy as np
-import warnings
+import pandas as pd
+
+log = logging.getLogger(__name__)
+
 
 def printw(x):
     with pd.option_context('display.max_rows', -1, 'display.max_columns', 5):
-        print('hi')
         print(x)
 
 
@@ -49,13 +52,12 @@ def generate_changes(df, from_field, to_field):
         y.insert(1, 'from', np.nan)
         return y
     else:
-        warnings.warn('Fields {} and {} are not present in collection {}'.format(from_field, to_field, df.name))
+        log.warning('Fields {} and {} are not in DataFrame'.format(from_field, to_field))
         return None
 
 
-#print(u.get_change_summary(fpr, ['Study Title','Workflow Name'], changes_not_allowed))
 def get_change_summary(fpr, fpr_cols, c, field_val=None, from_val=None, to_val=None):
-    cond = pd.Series(True,index=c.index)
+    cond = pd.Series(True, index=c.index)
     if field_val is not None:
         cond = cond & (c['field'].astype(str).fillna('') == field_val)
     if from_val is not None:
@@ -63,4 +65,4 @@ def get_change_summary(fpr, fpr_cols, c, field_val=None, from_val=None, to_val=N
     if to_val is not None:
         cond = cond & (c['to'].astype(str).fillna('') == to_val)
     return fpr.loc[fpr.index.isin(c.loc[cond].index), fpr_cols].astype(str).fillna('').apply(lambda x: '+'.join(x),
-                                                                                            axis=1).value_counts()
+                                                                                             axis=1).value_counts()

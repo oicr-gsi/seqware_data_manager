@@ -27,13 +27,9 @@ def merge_id_map(x, y, keys):
 
 
 def update_id_map(from_df, to_df, id_map_from_cols, from_cols, id_map_to_cols, to_cols):
-    # from_keys = from_df.loc[:, id_map_from_cols]
-    # from_keys['join_key'] = from_df.loc[:, from_cols].astype(str).sum(axis=1)
     from_keys = from_df.loc[from_df.loc[:, from_cols].notnull().all(axis=1), id_map_from_cols]
     from_keys['join_key'] = from_df.loc[:, from_cols].astype(str).sum(axis=1)
 
-    # to_keys = to_df.loc[:, id_map_to_cols]
-    # to_keys['join_key'] = to_df.loc[:, to_cols].astype(str).sum(axis=1)
     to_keys = to_df.loc[to_df.loc[:, to_cols].notnull().all(axis=1), id_map_to_cols]
     to_keys['join_key'] = to_df.loc[:, to_cols].astype(str).sum(axis=1)
 
@@ -42,14 +38,6 @@ def update_id_map(from_df, to_df, id_map_from_cols, from_cols, id_map_to_cols, t
                                                          ~merge_from_to.index.isin(merge_from_to.index.duplicated())]
 
     new_id_map = merge_from_to_no_dups_no_missing.loc[:, id_map_from_cols + id_map_to_cols]
-    # new_id_map.columns = id_map.columns
     new_id_map.drop_duplicates(inplace=True)
     new_id_map.drop_duplicates(id_map_from_cols, keep=False, inplace=True)
-    # new_id_map.drop(new_id_map.loc[new_id_map.loc[:, ['provider', 'from_id']].duplicated()].index, inplace=True)
     return new_id_map
-
-    # m1 = id_map.reset_index().merge(new_id_map, how='left', on=id_map_from_cols, indicator=True).set_index('index')
-    # if len(id_map) != len(m1):
-    #     raise Exception('mismatch in length')
-    # m1.drop(m1.loc[m1.index.isin(m1.index.duplicated())].index, inplace=True)
-    # id_map.loc[id_map[id_map_to_cols].isnull(), id_map_to_cols] = m1.loc[id_map[id_map_to_cols].isnull(), 'to_id_y']

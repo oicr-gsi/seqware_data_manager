@@ -1,21 +1,8 @@
 import defopt
 
-
-def update(fpr_path, sp_path, lp_path):
-    """
-    Generate updates
-
-    :param str fpr_path: file provenance path
-    :param str sp_path:  sample provenance path
-    :param str lp_path: lane provenance path
-    """
-    from context import config
-    config.fpr_path=fpr_path
-    config.sp_path=sp_path
-    config.lp_path=lp_path
-
-    import tasks.migrate_analysis_to_new_lims_provider
-
+import tasks.change_analysis_lims_provider.cli
+import tasks.load_analysis_lims_data.cli
 
 if __name__ == '__main__':
-    defopt.run([update], short={}, strict_kwonly=False)
+    defopt.run([tasks.load_analysis_lims_data.cli.load_analysis_lims_data,
+                tasks.change_analysis_lims_provider.cli.change_analysis_lims_provider], short={}, strict_kwonly=False)
