@@ -10,6 +10,6 @@ fpr_to_provenance_map = None
 
 filters = {}
 
-rules_path = '~/config/rules.json'
+rules_config_path = None
 
 annotations = {}

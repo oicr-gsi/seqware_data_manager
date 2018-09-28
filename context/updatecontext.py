@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import TIMESTAMP
 
 from context.basecontext import BaseContext
-from context.changecontext import ChangeContext
+from context.rulecontext import RuleContext
 from utils.file import get_file_path
 
 
@@ -12,7 +12,7 @@ class UpdateLimsKeyContext(BaseContext):
         self.to_table = to_table
 
     @classmethod
-    def generate_updates(cls, ctx: ChangeContext):
+    def generate_updates(cls, ctx: RuleContext):
         cols = ['lims_ius_swid', 'lims_id', 'lims_version', 'lims_last_modified', 'lims_provider']
 
         from_table_okay = ctx.fpr.loc[~ctx.fpr.index.isin(ctx.changes_not_allowed.index),

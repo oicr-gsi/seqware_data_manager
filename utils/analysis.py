@@ -138,7 +138,9 @@ default_fp_ignore_fields = ['Sample Attributes.run_yielded_SE_read',
                             'Sample Attributes.skip',
                             'Sequencer Run Attributes.skip',
                             'Parent Sample Attributes.skip',
-                            'Lane Attributes.skip'
+                            'Lane Attributes.skip',
+                            'Parent Sample Attributes.subproject',
+                            'Parent Sample Attributes.institute'
                             ]
 
 
@@ -264,30 +266,6 @@ def get_fp_with_lims_provenance(lane_provenance_file_path,
     return fp_with_lims_provenance
 
 
-def get_changes(fp_with_lims_provenance, fp_to_provenance_map=default_fp_to_provenance_map_str):
-    if isinstance(fp_to_provenance_map, str):
-        fp_to_provenance_map = json.loads(fp_to_provenance_map, object_pairs_hook=collections.OrderedDict)
-
-    changes = pd.DataFrame(columns=['field', 'from', 'to'])
-    for from_field, to_field in fp_to_provenance_map.items():
-        log.debug('Comparing {} to {}'.format(from_field, to_field))
-        changes = changes.append(utils.pandas.generate_changes(fp_with_lims_provenance, from_field, to_field))
-
-    # convert to categorical to reduce size
-    changes['field'] = changes['field'].astype('category')
-    changes['from'] = changes['from'].apply(utils.transformations.convert_to_string).astype('category')
-    changes['to'] = changes['to'].apply(utils.transformations.convert_to_string).astype('category')
-
-    # include additional fields required when filtering of changes
-    additional_fields = fp_with_lims_provenance.loc[:, ['Workflow Name', 'LIMS Provider', 'Last Modified']]
-    additional_fields.columns = ['workflow', 'provider', 'processing_date']
-    additional_fields['workflow'] = additional_fields['workflow'].astype('category')
-    additional_fields['provider'] = additional_fields['provider'].astype('category')
-    additional_fields['processing_date'] = pd.to_datetime(additional_fields['processing_date'])
-    changes = changes.reset_index().merge(additional_fields.reset_index(), how='left', on='index').set_index('index')
-    return changes
-
-
 def generate_workflow_run_hierarchy(fp):
     wfr = fp.loc[fp['Workflow Run SWID'].notnull(),
                  ['Workflow Run Input File SWAs', 'Workflow Run SWID']].drop_duplicates(
@@ -319,18 +297,3 @@ def generate_workflow_run_hierarchy(fp):
     wfr_hierarchy = wfr_hierarchy.drop_duplicates()
 
     return wfr_hierarchy, input_ids_missing_in_fp
-
-
-def get_related_workflow_runs(fp, index, hierarchy):
-    direct_wfr_swids = fp.loc[fp.index.isin(index), 'Workflow Run SWID'].drop_duplicates().tolist()
-
-    def get_downstream(xs):
-        if len(xs) > 1:
-            return get_downstream([xs[0]]) + get_downstream(xs[1:])
-        elif len(xs) == 1:
-            return [xs[0]] + get_downstream(
-                hierarchy.loc[hierarchy['parent'] == xs[0], 'child'].dropna().tolist())
-        else:
-            return []
-
-    return pd.Series(get_downstream(direct_wfr_swids)).drop_duplicates().astype('int')

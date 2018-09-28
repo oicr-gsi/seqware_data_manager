@@ -1,25 +1,33 @@
+import collections
+import json
+
 import pandas as pd
 
+import utils.analysis
 from context.basecontext import BaseContext
-from utils.analysis import get_fp_with_lims_provenance, get_changes, generate_workflow_run_hierarchy
+from utils.analysis import get_fp_with_lims_provenance, generate_workflow_run_hierarchy
 
 
 class AnalysisLimsUpdateDataContext(BaseContext):
 
-    def __init__(self, fpr, changes, hierarchy):
+    def __init__(self, fpr, fp_to_provenance_map, hierarchy):
         self.fpr = fpr
-        self.changes = changes
+        self.fp_to_provenance_map = fp_to_provenance_map
         self.hierarchy = hierarchy
 
     @classmethod
     def load_from_files(cls, lane_provenance_path, sample_provenance_path, provider, file_provenance_path):
+        fp_to_provenance_map = utils.analysis.default_fp_to_provenance_map_str
+        if isinstance(fp_to_provenance_map, str):
+            fp_to_provenance_map = json.loads(fp_to_provenance_map, object_pairs_hook=collections.OrderedDict)
+
         fpr_with_lims_provenance = get_fp_with_lims_provenance(lane_provenance_path,
                                                                sample_provenance_path,
                                                                provider,
                                                                file_provenance_path)
-        changes = get_changes(fpr_with_lims_provenance)
+
         wfr_hierarchy, _ = generate_workflow_run_hierarchy(fpr_with_lims_provenance)
-        return cls(fpr_with_lims_provenance, changes, wfr_hierarchy)
+        return cls(fpr_with_lims_provenance, fp_to_provenance_map, wfr_hierarchy)
 
     def filter(self, filters: dict):
         self._log.info('Applying filters: {}'.format(filters))
@@ -31,9 +39,10 @@ class AnalysisLimsUpdateDataContext(BaseContext):
             select_mask = select_mask & key_mask
 
         filtered_fpr = self.fpr[select_mask]
-        filtered_changes = self.changes[self.changes.index.isin(filtered_fpr.index)]
-        self._log.info('Selected {}/{} records ({}/{} changes)'.format(len(filtered_fpr),
-                                                                       len(self.fpr),
-                                                                       len(filtered_changes),
-                                                                       len(self.changes)))
-        return self.__class__(filtered_fpr, filtered_changes, self.hierarchy)
+        # filtered_changes = self.changes[self.changes.index.isin(filtered_fpr.index)]
+        # self._log.info('Selected {}/{} records ({}/{} changes)'.format(len(filtered_fpr),
+        #                                                                len(self.fpr),
+        #                                                                len(filtered_changes),
+        #                                                                len(self.changes)))
+        self._log.info('Selected {}/{} records'.format(len(filtered_fpr), len(self.fpr)))
+        return self.__class__(filtered_fpr, self.fp_to_provenance_map, self.hierarchy)

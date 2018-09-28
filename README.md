@@ -1,7 +1,10 @@
 # seqware_data_manager
 
-A project to collect seqware data management tasks.  Tasks include:
-- updating analysis to a new lims provider
+A project to collect seqware data management tasks.
+
+# Requirements
+- Python 3.6+
+- virtualenv
 
 # Installation
 ```
