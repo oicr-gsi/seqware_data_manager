@@ -12,10 +12,10 @@ from utils.file import getpath, get_file_path
 
 class RuleContext(BaseContext):
 
-    def __init__(self, ctx: ChangeContext, changes_allowed, changes_not_allowed):
+    def __init__(self, ctx: ChangeContext, changes_allowed, changes_blocked):
         self._ctx = ctx
         self.changes_allowed = changes_allowed
-        self.changes_not_allowed = changes_not_allowed
+        self.changes_blocked = changes_blocked
 
     @classmethod
     def apply_rules(cls, fpr, changes, rules):
@@ -30,7 +30,7 @@ class RuleContext(BaseContext):
                 raise Exception('Missing rule "{}"'.format(rule_name))
             allowed_rules_mask = allowed_rules_mask | rule_func(fpr, changes, **rule_args)
 
-        not_allowed_rules_mask = False
+        blocked_rules_mask = False
         for rule in rules['deny']:
             rule_name = rule['rule']
             rule_args = rule['args']
@@ -39,9 +39,9 @@ class RuleContext(BaseContext):
                 rule_func = getattr(rule_functions, rule_name)
             else:
                 raise Exception('Missing rule {}'.format(rule_name))
-            not_allowed_rules_mask = not_allowed_rules_mask | rule_func(fpr, changes, **rule_args)
+            blocked_rules_mask = blocked_rules_mask | rule_func(fpr, changes, **rule_args)
 
-        return (allowed_rules_mask) & (~not_allowed_rules_mask)
+        return (allowed_rules_mask) & (~blocked_rules_mask)
 
     @classmethod
     def generate_and_apply_rules(cls, ctx: ChangeContext, rules_config_path):
@@ -52,19 +52,19 @@ class RuleContext(BaseContext):
         rules_config = json.load(getpath(rules_config_path).open())
         allowed_mask = cls.apply_rules(ctx.fpr, ctx.changes, rules_config)
         changes_allowed = ctx.changes[allowed_mask]
-        changes_not_allowed = ctx.changes[~allowed_mask]
+        changes_blocked = ctx.changes[~allowed_mask]
 
         cls._log.info('{} / {} changes allowed'.format(len(changes_allowed), len(ctx.changes)))
-        cls._log.info('{} / {} changes not allowed'.format(len(changes_not_allowed), len(ctx.changes)))
+        cls._log.info('{} / {} changes blocked'.format(len(changes_blocked), len(ctx.changes)))
 
         elapsed = timeit.default_timer() - start_time
         cls._log.info('Execution time = {:.1f}s ({:.0f} records/s)'.format(elapsed, len(ctx.fpr) / elapsed))
 
-        return cls(ctx, changes_allowed, changes_not_allowed)
+        return cls(ctx, changes_allowed, changes_blocked)
 
     def get_invalid_workflow_runs(self):
         direct_wfr_swids = self.fpr.loc[
-            self.fpr.index.isin(self.changes_not_allowed), 'Workflow Run SWID'].drop_duplicates().tolist()
+            self.fpr.index.isin(self.changes_blocked), 'Workflow Run SWID'].drop_duplicates().tolist()
 
         def get_downstream(xs):
             if len(xs) > 1:
@@ -78,11 +78,14 @@ class RuleContext(BaseContext):
         return pd.Series(get_downstream(direct_wfr_swids)).drop_duplicates().astype('int')
 
     def summarize(self, out_dir):
-        generate_change_summary_report(self.fpr, self.changes_not_allowed,
-                                       get_file_path(out_dir, 'changes_blocked_by_workflow_run.csv'))
+        allowed_changes_file = get_file_path(out_dir, 'changes_allowed.csv')
+        blocked_changes_file = get_file_path(out_dir, 'changes_blocked.csv')
 
-        generate_change_summary_report(self.fpr, self.changes_allowed,
-                                       get_file_path(out_dir, 'changes_allowed_by_workflow_run.csv'))
+        self._log.info('Writing allowed changes to %s', allowed_changes_file)
+        generate_change_summary_report(self.fpr, self.changes_allowed, allowed_changes_file)
+
+        self._log.info('Writing blocked changes to %s', blocked_changes_file)
+        generate_change_summary_report(self.fpr, self.changes_blocked, blocked_changes_file)
 
     @property
     def fpr(self):
