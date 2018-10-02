@@ -8,11 +8,11 @@ from utils.file import getpath
 log = logging.getLogger(__name__)
 
 
-def filter_changes(fpr, changes, filters_file):
-    filters = pd.read_csv(getpath(filters_file), index_col=None)
+def filter_changes(fpr, changes, filters_csv_file):
+    filters = pd.read_csv(getpath(filters_csv_file), index_col=None)
     mask = False
     for i, rule in filters.iterrows():
-        log.debug('Applying filter {}:[{}]->[{}]'.format(rule['field'], rule['from'], rule['to']))
+        log.info('Applying filter {}:[{}]->[{}]'.format(rule['field'], rule['from'], rule['to']))
         current_mask = True
         current_mask = current_mask & utils.logic.string_match(changes, 'workflow', rule['workflow'])
         current_mask = current_mask & utils.logic.string_match(changes, 'provider', rule['provider'])
@@ -22,5 +22,33 @@ def filter_changes(fpr, changes, filters_file):
         current_mask = current_mask & utils.logic.string_match(changes, 'field', rule['field'])
         current_mask = current_mask & utils.logic.string_match(changes, 'from', rule['from'])
         current_mask = current_mask & utils.logic.string_match(changes, 'to', rule['to'])
+        mask = mask | current_mask
+    return mask
+
+
+def generic_filter_changes(fpr, changes, filters_csv_file=None, filters=None):
+    if filters_csv_file:
+        filters = pd.read_csv(getpath(filters_csv_file))  # type: pd.DataFrame
+    elif filters:
+        filters = pd.DataFrame(filters)  # type: pd.DataFrame
+    else:
+        raise Exception('No filters provided')
+
+    required_columns = {'field', 'from', 'to'}
+    if not required_columns.issubset(filters.columns):
+        raise Exception('Required columns not found')
+
+    filter_columns = set(filters.columns) - set(required_columns)  # type:set
+    if not filter_columns.issubset(fpr.columns):
+        missing_filter_columns = set(filter_columns) - set(fpr.columns)
+        raise Exception('The following filter columns are missing: ' + missing_filter_columns)
+
+    mask = False
+    for i, rule in filters.iterrows():
+        current_mask = True
+        for filter_column in filter_columns:
+            current_mask = current_mask & changes.index.isin(fpr.loc[fpr[filter_column] == rule[filter_column]].index)
+        for required_column in required_columns:
+            current_mask = current_mask & utils.logic.string_match(changes, required_column, rule[required_column])
         mask = mask | current_mask
     return mask
