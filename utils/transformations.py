@@ -26,18 +26,18 @@ def merge_id_map(x, y, keys):
     return m
 
 
-def update_id_map(from_df, to_df, id_map_from_cols, from_cols, id_map_to_cols, to_cols):
-    from_keys = from_df.loc[from_df.loc[:, from_cols].notnull().all(axis=1), id_map_from_cols]
-    from_keys['join_key'] = from_df.loc[:, from_cols].astype(str).sum(axis=1)
+def unique_join(from_df, to_df, from_join_key_cols, from_select_cols, to_join_key_cols, to_select_cols):
+    from_keys = from_df.loc[from_df.loc[:, from_select_cols].notnull().all(axis=1), from_join_key_cols]
+    from_keys['join_key'] = from_df.loc[:, from_select_cols].astype(str).sum(axis=1)
 
-    to_keys = to_df.loc[to_df.loc[:, to_cols].notnull().all(axis=1), id_map_to_cols]
-    to_keys['join_key'] = to_df.loc[:, to_cols].astype(str).sum(axis=1)
+    to_keys = to_df.loc[to_df.loc[:, to_select_cols].notnull().all(axis=1), to_join_key_cols]
+    to_keys['join_key'] = to_df.loc[:, to_select_cols].astype(str).sum(axis=1)
 
     merge_from_to = pd.merge(from_keys, to_keys, on='join_key', how='left', indicator=True)
-    merge_from_to_no_dups_no_missing = merge_from_to.loc[(merge_from_to['_merge'] == 'both') &
-                                                         ~merge_from_to.index.isin(merge_from_to.index.duplicated())]
+    merge_from_to_no_dups_no_missing = merge_from_to.loc[
+        (merge_from_to['_merge'] == 'both') & ~merge_from_to.index.duplicated()]
 
-    new_id_map = merge_from_to_no_dups_no_missing.loc[:, id_map_from_cols + id_map_to_cols]
-    new_id_map.drop_duplicates(inplace=True)
-    new_id_map.drop_duplicates(id_map_from_cols, keep=False, inplace=True)
-    return new_id_map
+    df = merge_from_to_no_dups_no_missing.loc[:, from_join_key_cols + to_join_key_cols]
+    df.drop_duplicates(inplace=True)
+    df.drop_duplicates(from_join_key_cols, keep=False, inplace=True)
+    return df

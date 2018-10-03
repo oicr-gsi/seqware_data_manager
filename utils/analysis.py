@@ -196,9 +196,9 @@ def get_fp_with_lims_provenance(lane_provenance_file_path,
 
     def apply_mapping(from_data, to_data, from_fields, to_fields, id_map):
         log.debug('Mapping records using [{}] to [{}]'.format('+'.join(from_fields), '+'.join(to_fields)))
-        new_id_map = utils.transformations.update_id_map(from_data, to_data,
-                                                         ['LIMS Provider', 'LIMS ID'], from_fields,
-                                                         ['provenanceId'], to_fields)
+        new_id_map = utils.transformations.unique_join(from_data, to_data,
+                                                       ['LIMS Provider', 'LIMS ID'], from_fields,
+                                                       ['provenanceId'], to_fields)
         return utils.transformations.merge_id_map(id_map, new_id_map, ['LIMS Provider', 'LIMS ID'])
 
     id_map = fp.loc[:, ['LIMS Provider', 'LIMS ID']]
