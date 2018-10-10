@@ -163,6 +163,7 @@ def get_fp_with_lims_provenance(lane_provenance_file_path,
     # validate that all data fields are mapped or filtered
     log.info('Validating data...')
 
+    # check for unhandled fields
     sp_cols_diff = set(sp.columns) - set(fp_to_provenance_map.values()) - set(sp_ignore_fields)
     if sp_cols_diff:
         raise Exception('Missing sample provenance mapping for: {}'.format(sp_cols_diff))
@@ -172,6 +173,11 @@ def get_fp_with_lims_provenance(lane_provenance_file_path,
     fp_cols_diff = set(fp.columns) - set(fp_to_provenance_map.keys()) - set(fp_ignore_fields)
     if fp_cols_diff:
         raise Exception('Missing file provenance mapping for: {}'.format(fp_cols_diff))
+
+    # add missing columns to fp that are defined in fp_to_provenance map
+    fp_missing_cols = list(fp_to_provenance_map.keys() - fp.columns)
+    if fp_missing_cols:
+        fp = fp.reindex(columns = fp.columns.tolist() + fp_missing_cols)
 
     # join fp and sp/lp
     log.info('Linking data...')
