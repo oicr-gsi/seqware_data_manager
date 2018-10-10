@@ -274,8 +274,7 @@ def get_fp_with_lims_provenance(lane_provenance_file_path,
 
 def generate_workflow_run_hierarchy(fp):
     wfr = fp.loc[fp['Workflow Run SWID'].notnull(),
-                 ['Workflow Run Input File SWAs', 'Workflow Run SWID']].drop_duplicates(
-        'Workflow Run SWID')
+                 ['Workflow Run Input File SWAs', 'Workflow Run SWID']].drop_duplicates('Workflow Run SWID')
 
     wfr_with_inputs = wfr.loc[wfr['Workflow Run Input File SWAs'].notnull()]
     wfr_no_inputs = wfr.loc[wfr['Workflow Run Input File SWAs'].isnull()]
@@ -283,9 +282,14 @@ def generate_workflow_run_hierarchy(fp):
     wfr_file_in = pd.DataFrame({
         col: np.repeat(wfr_with_inputs[col].values, wfr_with_inputs['Workflow Run Input File SWAs'].str.len())
         for col in wfr_with_inputs.columns.difference(['Workflow Run Input File SWAs'])
-    }).assign(
-        **{'Workflow Run Input File SWAs': np.concatenate(wfr_with_inputs['Workflow Run Input File SWAs'].values)})
-    wfr_file_in = wfr_file_in.append(wfr_no_inputs, ignore_index=True)
+    })
+
+    if len(wfr_with_inputs['Workflow Run Input File SWAs'].values) > 0:
+        wfr_file_in['Workflow Run Input File SWAs'] = np.concatenate(wfr_with_inputs['Workflow Run Input File SWAs'].values)
+    else:
+        wfr_file_in['Workflow Run Input File SWAs'] = []
+
+    wfr_file_in = wfr_file_in.append(wfr_no_inputs, ignore_index=True, sort=True)
     wfr_file_in['Workflow Run Input File SWAs'] = wfr_file_in['Workflow Run Input File SWAs'].astype('float')
 
     input_ids_missing_in_fp = set(wfr_file_in['Workflow Run Input File SWAs'].dropna()) - set(fp['File SWID'].dropna())
