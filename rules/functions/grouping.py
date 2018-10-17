@@ -1,66 +1,60 @@
 import utils.transformations as u
 
 
-def grouping_logic_okay(fpr, changes):
-    # only tissue prep and region changes are filtering candidates for this rule
-    allowed_field_changes = ['Sample Attributes.geo_tissue_preparation', 'Sample Attributes.geo_tissue_region']
+def grouping_logic_okay(data, changes, allowed_field_changes=None, group_by_type=None, group_by_field=None,
+                        current_group_fields=None, new_group_fields=None):
+    if allowed_field_changes is None:
+        allowed_field_changes = ['Sample Attributes.geo_tissue_preparation', 'Sample Attributes.geo_tissue_region']
 
-    current = ['Root Sample Name',
-               'Sample Attributes.geo_tissue_origin',
-               'Sample Attributes.geo_tissue_type',
-               'Sample Attributes.geo_tissue_preparation',
-               'Sample Attributes.geo_tissue_region',
-               'Sample Attributes.geo_library_source_template_type',
-               'Sample Attributes.geo_group_id',
-               'Sample Attributes.geo_targeted_resequencing']
+    if group_by_type is None:
+        group_by_type = ['Workflow Name']
 
-    new = ['rootSampleName',
-           'sampleAttributes.geo_tissue_origin',
-           'sampleAttributes.geo_tissue_type',
-           'sampleAttributes.geo_tissue_preparation',
-           'sampleAttributes.geo_tissue_region',
-           'sampleAttributes.geo_library_source_template_type',
-           'sampleAttributes.geo_group_id',
-           'sampleAttributes.geo_targeted_resequencing']
+    if group_by_field is None:
+        group_by_field = 'File SWID'
 
-    group = ''
-    for i in current:
-        if i in fpr.columns:
-            group += fpr[i].apply(u.convert_to_string).fillna('')
-    fpr = fpr.assign(current_group=group)
+    if current_group_fields is None:
+        current_group_fields = ['Root Sample Name',
+                                'Sample Attributes.geo_tissue_origin',
+                                'Sample Attributes.geo_tissue_type',
+                                'Sample Attributes.geo_tissue_preparation',
+                                'Sample Attributes.geo_tissue_region',
+                                'Sample Attributes.geo_library_source_template_type',
+                                'Sample Attributes.geo_group_id',
+                                'Sample Attributes.geo_targeted_resequencing']
 
-    group = ''
-    for i in new:
-        if i in fpr.columns:
-            group += fpr[i].apply(u.convert_to_string).fillna('')
-    fpr = fpr.assign(new_group=group)
+    if new_group_fields is None:
+        new_group_fields = ['rootSampleName',
+                            'sampleAttributes.geo_tissue_origin',
+                            'sampleAttributes.geo_tissue_type',
+                            'sampleAttributes.geo_tissue_preparation',
+                            'sampleAttributes.geo_tissue_region',
+                            'sampleAttributes.geo_library_source_template_type',
+                            'sampleAttributes.geo_group_id',
+                            'sampleAttributes.geo_targeted_resequencing']
 
-    fpr_groups = fpr[['current_group', 'new_group']].drop_duplicates()
+    data['current_group'] = data[current_group_fields].applymap(u.convert_to_string).fillna('').astype(str).sum(axis=1)
+    data['new_group'] = data[new_group_fields].applymap(u.convert_to_string).fillna('').astype(str).sum(axis=1)
 
-    splits = fpr[['current_group', 'new_group']].drop_duplicates().groupby('current_group').filter(
-        lambda x: len(x) > 1)
-    splits2 = splits.loc[splits['current_group'] != splits['new_group']]
+    current_group_key = group_by_type + ['current_group']
+    new_group_key = group_by_type + ['new_group']
+    current_grouped_data = data.groupby(current_group_key)
+    new_grouped_data = data.groupby(new_group_key)
 
-    merges = fpr[['current_group', 'new_group']].drop_duplicates().groupby('new_group').filter(
-        lambda x: len(x) > 1)
-    merges2 = merges.loc[merges['current_group'] != merges['new_group']]
+    # check if current group records equals new group records
+    okay_current_to_new_group_changes = data.groupby(group_by_type + ['current_group', 'new_group']).apply(
+        lambda x: current_grouped_data.get_group(tuple(x[current_group_key].values[0])).index.equals(
+            new_grouped_data.get_group(tuple(x[new_group_key].values[0])).index)
+    ).reset_index(name='grouping_is_okay')
 
-    def is_okay(df):
-        if any(df.index.isin(merges2.index)):
-            return False
-        elif any(df.index.isin(splits2.index)):
-            return False
-        elif len(df) == 1:
-            return True
-        elif (df['current_group'].nunique() == 1) & (df['new_group'].nunique() == 1):
-            return True
-        elif all(df['current_group'] == df['new_group']):
-            return True
-        else:
-            return False
+    # merge data with okay_current_to_new_group_changes
+    data = data.reset_index().merge(okay_current_to_new_group_changes,
+                                    on=group_by_type + ['current_group', 'new_group']).set_index('index')
 
-    groupby_field = 'File SWID'
-    okay_group_key_changes = fpr.groupby(groupby_field).apply(is_okay)
-    okay_fpr_group_changes = fpr.loc[fpr[groupby_field].isin(okay_group_key_changes[okay_group_key_changes].index)]
+    # for each grouping, check all group name changes are valid
+    okay_group_changes = data.groupby(group_by_field).apply(lambda df: all(df['grouping_is_okay']))
 
-    return changes.index.isin(okay_fpr_group_changes.index) & changes['field'].isin(allowed_field_changes)
+    # select (by group_by_field) all data records with okay group changes
+    okay_data_group_changes = data.loc[data[group_by_field].isin(okay_group_changes[okay_group_changes].index)]
+
+    # return changes that are in okay data grouping changes set and is an allowed field change
+    return changes.index.isin(okay_data_group_changes.index) & changes['field'].isin(allowed_field_changes)
