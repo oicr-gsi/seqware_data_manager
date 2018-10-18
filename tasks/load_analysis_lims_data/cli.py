@@ -2,7 +2,7 @@ import logging
 import sys
 
 import tasks.load_analysis_lims_data.config as config
-from context.analysislimsupdatedatacontext import AnalysisLimsUpdateDataContext
+from operations.join_data.analysislimsupdatedatacontext import AnalysisLimsUpdateDataContext
 
 
 def load_analysis_lims_data(output_path: str,

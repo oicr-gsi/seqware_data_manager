@@ -1,11 +1,11 @@
 import logging
 import sys
 
-from context.analysislimsupdatedatacontext import AnalysisLimsUpdateDataContext
-from context.annotatecontext import AnnotateWorkflowRunContext
-from context.changecontext import ChangeContext
-from context.rulecontext import RuleContext
-from context.updatecontext import UpdateLimsKeyContext
+from operations.analyze_changes.rulecontext import RuleContext
+from operations.annotate_analysis.annotatecontext import AnnotateWorkflowRunContext
+from operations.apply_changes.updatecontext import UpdateLimsKeyContext
+from operations.calculate_changes.changecontext import ChangeContext
+from operations.join_data.analysislimsupdatedatacontext import AnalysisLimsUpdateDataContext
 from tasks.change_analysis_lims_provider import config
 from utils.file import getpath
 

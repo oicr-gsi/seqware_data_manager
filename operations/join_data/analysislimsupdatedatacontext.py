@@ -4,7 +4,7 @@ import json
 import pandas as pd
 
 import utils.analysis
-from context.basecontext import BaseContext
+from models.context import BaseContext
 from utils.analysis import get_fp_with_lims_provenance, generate_workflow_run_hierarchy
 
 
@@ -39,10 +39,5 @@ class AnalysisLimsUpdateDataContext(BaseContext):
             select_mask = select_mask & key_mask
 
         filtered_fpr = self.fpr[select_mask]
-        # filtered_changes = self.changes[self.changes.index.isin(filtered_fpr.index)]
-        # self._log.info('Selected {}/{} records ({}/{} changes)'.format(len(filtered_fpr),
-        #                                                                len(self.fpr),
-        #                                                                len(filtered_changes),
-        #                                                                len(self.changes)))
         self._log.info('Selected {}/{} records'.format(len(filtered_fpr), len(self.fpr)))
         return self.__class__(filtered_fpr, self.fp_to_provenance_map, self.hierarchy)

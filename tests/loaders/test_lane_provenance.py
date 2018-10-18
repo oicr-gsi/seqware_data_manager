@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from loader import lane_provenance
+from loaders import lane_provenance
 
 
 def test_load(shared_datadir):

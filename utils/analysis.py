@@ -7,7 +7,7 @@ import pandas as pd
 
 import utils.pandas
 import utils.transformations
-from loader import lane_provenance, sample_provenance, file_provenance
+from loaders import lane_provenance, sample_provenance, file_provenance
 
 log = logging.getLogger(__name__)
 

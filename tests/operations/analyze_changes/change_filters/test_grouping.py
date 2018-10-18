@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from rules.functions.grouping import grouping_logic_okay
+from operations.analyze_changes.change_filters.grouping import grouping_logic_okay
 
 
 def test_empty():

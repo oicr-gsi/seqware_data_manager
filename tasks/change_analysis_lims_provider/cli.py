@@ -12,7 +12,7 @@ def change_analysis_lims_provider(output_dir: str = config.output_dir,
 
     :param output_dir: directory where to write summary reports and updates
     :param filters: filters to be used to select file provenance records to update
-    :param rules_config_path: rules configuration to apply to changes
+    :param rules_config_path: change_filters configuration to apply to changes
     :param data_context_path: load analysis lims data context from local file
     """
 

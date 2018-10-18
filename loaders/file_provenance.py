@@ -79,8 +79,7 @@ def load(uri):
     else:
         header_mode = None
 
-    fpr = pd.read_csv(uri, delimiter='\t', names=fpr_cols.keys(), dtype=fpr_cols,
-                      header=header_mode, low_memory=False)
+    fpr = pd.read_csv(uri, delimiter='\t', names=fpr_cols.keys(), dtype=fpr_cols, header=header_mode, low_memory=False)
 
     fpr['LIMS Last Modified'] = pd.to_datetime(fpr['LIMS Last Modified'])
     z = fpr.loc[fpr['Workflow Run Input File SWAs'].notnull(),

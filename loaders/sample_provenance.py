@@ -21,7 +21,6 @@ def load(url, provider) -> pd.DataFrame:
     # file provenance generation adds underscores
     sp['sequencerRunPlatformModel'] = sp['sequencerRunPlatformModel'].str.replace(' ', '_')
 
-    log.info(
-        'Completed loading {} sample provenance records in {:.1f}s'.format(len(sp),
-                                                                           timeit.default_timer() - start_time))
+    log.info('Completed loading {} sample provenance records in {:.1f}s'.format(len(sp),
+                                                                                timeit.default_timer() - start_time))
     return sp

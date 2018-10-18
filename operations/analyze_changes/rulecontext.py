@@ -3,10 +3,10 @@ import timeit
 
 import pandas as pd
 
-import rules.functions as rule_functions
-from context.basecontext import BaseContext
-from context.changecontext import ChangeContext
-from reports.change_summary import generate_change_summary_report
+import operations.change_filters as change_filters
+from models.context import BaseContext
+from operations.calculate_changes.changecontext import ChangeContext
+from operations.analyze_changes.reports.change_summary import generate_change_summary_report
 from utils.file import getpath, get_file_path
 
 
@@ -20,32 +20,34 @@ class RuleContext(BaseContext):
     @classmethod
     def apply_rules(cls, fpr, changes, rules):
         allowed_rules_mask = False
-        for rule in rules['allow']:
-            rule_name = rule['rule']
-            rule_args = rule['args']
-            cls._log.info('Applying inclusion rule {} with args {}'.format(rule_name, rule_args))
-            if hasattr(rule_functions, rule_name):
-                rule_func = getattr(rule_functions, rule_name)
-            else:
-                raise Exception('Missing rule "{}"'.format(rule_name))
-            allowed_rules_mask = allowed_rules_mask | rule_func(fpr, changes, **rule_args)
+        if 'allow' in rules:
+            for rule in rules['allow']:
+                rule_name = rule['rule']
+                rule_args = rule['args']
+                cls._log.info('Applying inclusion rule {} with args {}'.format(rule_name, rule_args))
+                if hasattr(change_filters, rule_name):
+                    change_filter = getattr(change_filters, rule_name)
+                else:
+                    raise Exception('Missing rule "{}"'.format(rule_name))
+                allowed_rules_mask = allowed_rules_mask | change_filter(fpr, changes, **rule_args)
 
         blocked_rules_mask = False
-        for rule in rules['deny']:
-            rule_name = rule['rule']
-            rule_args = rule['args']
-            cls._log.info('Applying exclusion rule {} with args {}'.format(rule_name, rule_args))
-            if hasattr(rule_functions, rule_name):
-                rule_func = getattr(rule_functions, rule_name)
-            else:
-                raise Exception('Missing rule {}'.format(rule_name))
-            blocked_rules_mask = blocked_rules_mask | rule_func(fpr, changes, **rule_args)
+        if 'deny' in rules:
+            for rule in rules['deny']:
+                rule_name = rule['rule']
+                rule_args = rule['args']
+                cls._log.info('Applying exclusion rule {} with args {}'.format(rule_name, rule_args))
+                if hasattr(change_filters, rule_name):
+                    change_filter = getattr(change_filters, rule_name)
+                else:
+                    raise Exception('Missing rule {}'.format(rule_name))
+                blocked_rules_mask = blocked_rules_mask | change_filter(fpr, changes, **rule_args)
 
         return (allowed_rules_mask) & (~blocked_rules_mask)
 
     @classmethod
     def generate_and_apply_rules(cls, ctx: ChangeContext, rules_config_path):
-        cls._log.info('Applying rules from {}'.format(rules_config_path))
+        cls._log.info('Applying change_filters from {}'.format(rules_config_path))
         start_time = timeit.default_timer()
 
         # allowed_rules_mask = False

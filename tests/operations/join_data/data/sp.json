@@ -1,0 +1,36 @@
+[
+  {
+    "studyTitle": "TEST",
+    "studyAttributes": {},
+    "rootSampleName": "TEST_0001",
+    "parentSampleName": "TEST_0001_nn_n_PE_350_WG:TEST_0001",
+    "sampleName": "TEST_0001_nn_n_PE_350_WG",
+    "sampleAttributes": {
+      "geo_library_source_template_type": [
+        "WG"
+      ],
+      "geo_organism": [
+        "Homo Sapiens"
+      ]
+    },
+    "sequencerRunName": "180102_SEQ0001_0001_A0000000000",
+    "sequencerRunAttributes": {
+      "instrument_name": [
+        "001"
+      ]
+    },
+    "sequencerRunPlatformModel": "Illumina HiSeq 2500",
+    "laneNumber": "1",
+    "laneAttributes": {
+      "pool_name": [
+        "TEST_POOL_0001"
+      ]
+    },
+    "iusTag": "AAAAAAAA",
+    "skip": false,
+    "sampleProvenanceId": "156_1_LDI8904",
+    "version": "36294f76c457bcdcc1e8f153f65925b47cecfeac59867b14995e79572b6ca7a3",
+    "lastModified": "2018-09-07T16:07:43Z",
+    "createdDate": "2011-07-15T00:00:00Z"
+  }
+]
