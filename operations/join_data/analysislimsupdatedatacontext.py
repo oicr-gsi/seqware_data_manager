@@ -33,8 +33,15 @@ class AnalysisLimsUpdateDataContext(BaseContext):
         self._log.info('Applying filters: {}'.format(filters))
         select_mask = pd.Series(True, index=self.fpr.index)
         for key, values in filters.items():
+            if isinstance(values, str):
+                values = values.split(',')
+            elif isinstance(values, list):
+                values = values
+            else:
+                raise ValueError(f"Unsupported filter value type = {type(values)}")
+
             key_mask = False
-            for value in values.split(','):
+            for value in values:
                 key_mask = key_mask | (self.fpr[key] == value)
             select_mask = select_mask & key_mask
 
