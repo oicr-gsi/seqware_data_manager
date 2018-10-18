@@ -3,10 +3,10 @@ import timeit
 
 import pandas as pd
 
-import operations.change_filters as change_filters
+import operations.analyze_changes.change_filters as change_filters
 from models.context import BaseContext
-from operations.calculate_changes.changecontext import ChangeContext
 from operations.analyze_changes.reports.change_summary import generate_change_summary_report
+from operations.calculate_changes.changecontext import ChangeContext
 from utils.file import getpath, get_file_path
 
 
