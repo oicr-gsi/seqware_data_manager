@@ -26,10 +26,10 @@ log = logging.getLogger(__name__)
 if config.data_context_path:
     ctx = AnalysisLimsUpdateDataContext.load(config.data_context_path)
 else:
-    ctx = AnalysisLimsUpdateDataContext.load_from_files(sample_provenance_path=config.sample_provenance_path,
-                                                        lane_provenance_path=config.lane_provenance_path,
+    ctx = AnalysisLimsUpdateDataContext.load_from_files(sample_provenance_path=config.sample_provenance_url,
+                                                        lane_provenance_path=config.lane_provenance_url,
                                                         provider=config.provider,
-                                                        file_provenance_path=config.file_provenance_path)
+                                                        file_provenance_path=config.file_provenance_url)
 ## filter data
 if config.filters:
     ctx = ctx.filter(config.filters)
@@ -37,7 +37,7 @@ if config.filters:
 ## generate changes
 change_ctx = ChangeContext.generate_changes(ctx)
 
-## apply change resolution rules
+## apply change resolution change_filters
 if config.rules_config_path:
     rule_context = RuleContext.generate_and_apply_rules(change_ctx, config.rules_config_path)
     rule_context.summarize(out_dir=getpath(config.output_dir))
