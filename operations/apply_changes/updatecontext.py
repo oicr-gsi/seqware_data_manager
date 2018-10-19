@@ -34,14 +34,14 @@ class UpdateLimsKeyContext(BaseContext):
         from_to_table = pd.merge(from_table, to_table, on='lims_ius_swid', suffixes=['_from', '_to'], how='left',
                                  indicator=True)
         if not (from_to_table['_merge'] == 'both').all():
-            raise Exception('Failure')
+            raise Exception('Unable to map current to new lims keys')
         if from_to_table['lims_ius_swid'].duplicated().any():
-            raise Exception('Failure')
+            raise Exception('Duplicate lims keys found')
 
         return cls(from_table, to_table)
 
     def summarize(self, out_dir):
-        self._log.info('No summary')
+        self._log.info(f'Generating updates for {len(self.from_table)} records')
 
     def to_sql(self, out_dir):
         current_lims_keys = self.from_table
@@ -70,6 +70,18 @@ class UpdateLimsKeyContext(BaseContext):
                 values.append('({})'.format(','.join(['\'{}\''.format(w) for w in record])))
             sql += (',\n'.join(values)) + ';\n\n'
 
+            sql += """DO
+            $do$
+            DECLARE
+            missing_lims_keys_count int;
+            BEGIN
+            SELECT count(*) FROM current_lims_keys clk WHERE clk.lims_ius_swid NOT IN (SELECT sw_accession FROM ius) INTO missing_lims_keys_count;
+            if(missing_lims_keys_count != 0) then
+            RAISE NOTICE 'missing records = %', missing_lims_keys_count;
+            end if;
+            END
+            $do$;\n\n"""
+
             sql += """WITH tmp AS (
             UPDATE lims_key lk 
             SET provider = nlk.lims_provider, 
@@ -88,7 +100,23 @@ class UpdateLimsKeyContext(BaseContext):
             RETURNING lk.*) 
             SELECT * INTO temporary table updated_lims_keys FROM tmp;\n\n"""
 
+            sql += """DO
+            $do$
+            DECLARE
+            total_lims_keys_count int;
+            missing_lims_keys_count int;
+            updated_lims_keys_count int;
+            BEGIN
+            SELECT count(*) FROM current_lims_keys INTO total_lims_keys_count;
+            SELECT count(*) FROM current_lims_keys clk WHERE clk.lims_ius_swid NOT IN (SELECT sw_accession FROM ius) INTO missing_lims_keys_count;
+            SELECT count(*) FROM updated_lims_keys INTO updated_lims_keys_count;
+            if((updated_lims_keys_count + missing_lims_keys_count) != total_lims_keys_count) then
+            RAISE 'updated record count does not match expectation';
+            end if;
+            END
+            $do$;\n\n"""
+
             with get_file_path(out_dir, 'update_lims_keys.sql').open('w') as out:
                 out.write(sql)
         else:
-            self._log.warning('Nothing to do')
+            self._log.warning('No updates to apply')
