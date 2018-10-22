@@ -31,8 +31,10 @@ else:
                                                         provider=config.provider,
                                                         file_provenance_path=config.file_provenance_url)
 ## filter data
-if config.filters:
-    ctx = ctx.filter(config.filters)
+record_count_before_filtering = len(ctx.fpr)
+ctx = ctx.apply_include_filters(config.include_filters)
+ctx = ctx.apply_exclude_filters(config.exclude_filters)
+log.info('Selected {}/{} records'.format(len(ctx.fpr), record_count_before_filtering))
 
 ## generate changes
 change_ctx = ChangeContext.generate_changes(ctx)

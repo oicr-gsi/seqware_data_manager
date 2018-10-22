@@ -8,7 +8,8 @@ log_level = 'INFO'
 
 fpr_to_provenance_map = None
 
-filters = {}
+include_filters = {}
+exclude_filters = {}
 
 rules_config_path = None
 
