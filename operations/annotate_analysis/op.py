@@ -5,7 +5,7 @@ from operations.analyze_changes.reports.change_summary import workflow_run_repor
 from utils.file import get_file_path
 
 
-class AnnotateWorkflowRunContext(BaseContext):
+class AnnotateRecords(BaseContext):
     def __init__(self, fpr, workflow_run_swids, tags):
         self.fpr = fpr  # type: pd.DataFrame
         self.workflow_run_swids = workflow_run_swids  # type: pd.Series

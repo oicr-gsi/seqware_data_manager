@@ -111,9 +111,6 @@ def test_allowed_field_changes():
     assert_series_equal(actual, expected)
 
 
-
-
-
 def test_group_split():
     data = pd.DataFrame({'type': ['W1', 'W1'],
                          'id': [1, 1],

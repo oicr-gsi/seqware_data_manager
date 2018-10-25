@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from loaders import sample_provenance
+from utils.loaders import sample_provenance
 
 
 def test_load(shared_datadir):

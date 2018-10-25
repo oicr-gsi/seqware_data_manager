@@ -1,4 +1,4 @@
-from operations.join_data import analysislimsupdatedatacontext
+from operations.import_and_join_data import JoinedData
 
 
 def test_load_from_files(shared_datadir):
@@ -6,7 +6,7 @@ def test_load_from_files(shared_datadir):
     lp = shared_datadir / 'lp.json'
     provider = 'lims-provider'
     fp = shared_datadir / 'fpr.tsv'
-    ctx = analysislimsupdatedatacontext.AnalysisLimsUpdateDataContext.load_from_files(
+    ctx = JoinedData.load_from_files(
         sample_provenance_path=sp.as_uri(),
         lane_provenance_path=lp.as_uri(),
         provider=provider,

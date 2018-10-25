@@ -3,17 +3,25 @@ import pandas as pd
 import utils.pandas
 import utils.transformations
 from models.context import BaseContext
-from operations.join_data.analysislimsupdatedatacontext import AnalysisLimsUpdateDataContext
+from operations.import_and_join_data import JoinedData
 
 
-class ChangeContext(BaseContext):
+class JoinedDataChangeSet(BaseContext):
 
-    def __init__(self, ctx: AnalysisLimsUpdateDataContext, changes):
+    def __init__(self, ctx: JoinedData, changes):
         self._ctx = ctx
         self.changes = changes
 
+    @property
+    def fpr(self):
+        return self._ctx.fpr
+
+    @property
+    def hierarchy(self):
+        return self._ctx.hierarchy
+
     @classmethod
-    def generate_changes(cls, ctx: AnalysisLimsUpdateDataContext):
+    def generate_changes(cls, ctx: JoinedData):
         fp_to_provenance_map = ctx.fp_to_provenance_map
 
         changes = pd.DataFrame(columns=['field', 'from', 'to'])
@@ -36,11 +44,3 @@ class ChangeContext(BaseContext):
             'index')
 
         return cls(ctx, changes)
-
-    @property
-    def fpr(self):
-        return self._ctx.fpr
-
-    @property
-    def hierarchy(self):
-        return self._ctx.hierarchy

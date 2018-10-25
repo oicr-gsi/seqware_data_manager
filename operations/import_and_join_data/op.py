@@ -9,7 +9,7 @@ from models.context import BaseContext
 from utils.analysis import get_fp_with_lims_provenance, generate_workflow_run_hierarchy
 
 
-class AnalysisLimsUpdateDataContext(BaseContext):
+class JoinedData(BaseContext):
     class FilterOperation(Enum):
         INCLUDE = 'include'
         EXCLUDE = 'exclude'
@@ -53,9 +53,9 @@ class AnalysisLimsUpdateDataContext(BaseContext):
                 key_mask = key_mask | (self.fpr[key] == value)
             select_mask = select_mask & key_mask
 
-        if operation == AnalysisLimsUpdateDataContext.FilterOperation.INCLUDE:
+        if operation == JoinedData.FilterOperation.INCLUDE:
             filtered_fpr = self.fpr[select_mask]
-        elif operation == AnalysisLimsUpdateDataContext.FilterOperation.EXCLUDE:
+        elif operation == JoinedData.FilterOperation.EXCLUDE:
             filtered_fpr = self.fpr[~select_mask]
         else:
             raise ValueError(f'Unsupported operation: {operation}')
@@ -63,7 +63,7 @@ class AnalysisLimsUpdateDataContext(BaseContext):
         return self.__class__(filtered_fpr, self.fp_to_provenance_map, self.hierarchy)
 
     def apply_include_filters(self, filters: dict):
-        return self.filter(AnalysisLimsUpdateDataContext.FilterOperation.INCLUDE, filters)
+        return self.filter(JoinedData.FilterOperation.INCLUDE, filters)
 
     def apply_exclude_filters(self, filters: dict):
-        return self.filter(AnalysisLimsUpdateDataContext.FilterOperation.EXCLUDE, filters)
+        return self.filter(JoinedData.FilterOperation.EXCLUDE, filters)

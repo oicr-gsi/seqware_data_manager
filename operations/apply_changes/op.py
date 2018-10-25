@@ -2,17 +2,17 @@ import pandas as pd
 from sqlalchemy import TIMESTAMP
 
 from models.context import BaseContext
-from operations.analyze_changes.rulecontext import RuleContext
+from operations.analyze_changes import AnalyzedChangeSet
 from utils.file import get_file_path
 
 
-class UpdateLimsKeyContext(BaseContext):
+class UpdateRecords(BaseContext):
     def __init__(self, from_table: pd.DataFrame, to_table: pd.DataFrame):
         self.from_table = from_table
         self.to_table = to_table
 
     @classmethod
-    def generate_updates(cls, ctx: RuleContext):
+    def generate_updates(cls, ctx: AnalyzedChangeSet):
         cols = ['lims_ius_swid', 'lims_id', 'lims_version', 'lims_last_modified', 'lims_provider']
 
         from_table_okay = ctx.fpr.loc[~ctx.fpr.index.isin(ctx.changes_blocked.index),

@@ -3,22 +3,22 @@ import timeit
 
 import pandas as pd
 
-import operations.analyze_changes.change_filters as change_filters
 from models.context import BaseContext
 from operations.analyze_changes.reports.change_summary import generate_change_summary_report
-from operations.calculate_changes.changecontext import ChangeContext
+from operations.calculate_changes import JoinedDataChangeSet
 from utils.file import getpath, get_file_path
 
 
-class RuleContext(BaseContext):
+class AnalyzedChangeSet(BaseContext):
 
-    def __init__(self, ctx: ChangeContext, changes_allowed, changes_blocked):
+    def __init__(self, ctx: JoinedDataChangeSet, changes_allowed, changes_blocked):
         self._ctx = ctx
         self.changes_allowed = changes_allowed
         self.changes_blocked = changes_blocked
 
     @classmethod
     def apply_rules(cls, fpr, changes, rules):
+        import operations.analyze_changes.change_filters as change_filters
         allowed_rules_mask = False
         if 'allow' in rules:
             for rule in rules['allow']:
@@ -46,7 +46,7 @@ class RuleContext(BaseContext):
         return (allowed_rules_mask) & (~blocked_rules_mask)
 
     @classmethod
-    def generate_and_apply_rules(cls, ctx: ChangeContext, rules_config_path):
+    def generate_and_apply_rules(cls, ctx: JoinedDataChangeSet, rules_config_path):
         cls._log.info('Applying change_filters from {}'.format(rules_config_path))
         start_time = timeit.default_timer()
 
