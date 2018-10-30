@@ -8,7 +8,7 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 
-def load(url, provider) -> pd.DataFrame:
+def load(url, provider_id) -> pd.DataFrame:
     start_time = timeit.default_timer()
     log.info('Started loading sample provenance from {}'.format(url))
     spj = json.load(urllib.request.urlopen(url))
@@ -16,7 +16,7 @@ def load(url, provider) -> pd.DataFrame:
     sp.createdDate = pd.to_datetime(sp.createdDate)
     sp.lastModified = pd.to_datetime(sp.lastModified)
     sp = sp.rename(columns={'sampleProvenanceId': 'provenanceId'})
-    sp['provider'] = provider
+    sp['provider'] = provider_id
 
     # file provenance generation adds underscores
     sp['sequencerRunPlatformModel'] = sp['sequencerRunPlatformModel'].str.replace(' ', '_')

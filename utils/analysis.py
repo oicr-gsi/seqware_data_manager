@@ -1,9 +1,11 @@
-import collections
 import json
 import logging
+import pathlib
+import urllib
 
 import numpy as np
 import pandas as pd
+import pkg_resources
 
 import utils.pandas
 import utils.transformations
@@ -11,179 +13,51 @@ from utils.loaders import file_provenance, lane_provenance, sample_provenance
 
 log = logging.getLogger(__name__)
 
-default_fp_to_provenance_map_str = """{
-    "Study Title": "studyTitle",
-    "Sequencer Run Name": "sequencerRunName",
-    "Lane Number": "laneNumber",
-    "Sequencer Run Platform Name": "sequencerRunPlatformModel",
-    "Root Sample Name": "rootSampleName",
-    "Parent Sample Name": "parentSampleName",
-    "Sample Name": "sampleName",
-    "IUS Tag": "iusTag",
-    "Sample Attributes.geo_external_name": "sampleAttributes.geo_external_name",
-    "Sample Attributes.geo_group_id": "sampleAttributes.geo_group_id",
-    "Sample Attributes.geo_group_id_description": "sampleAttributes.geo_group_id_description",
-    "Sample Attributes.geo_library_source_template_type": "sampleAttributes.geo_library_source_template_type",
-    "Sample Attributes.geo_nanodrop_concentration": "sampleAttributes.geo_nanodrop_concentration",
-    "Sample Attributes.geo_organism": "sampleAttributes.geo_organism",      
-    "Sample Attributes.geo_prep_kit": "sampleAttributes.geo_prep_kit",
-    "Sample Attributes.geo_purpose": "sampleAttributes.geo_purpose",
-    "Sample Attributes.geo_qubit_concentration": "sampleAttributes.geo_qubit_concentration",
-    "Sample Attributes.geo_receive_date": "sampleAttributes.geo_receive_date",
-    "Sample Attributes.geo_run_id_and_position": "sampleAttributes.geo_run_id_and_position",
-    "Sample Attributes.geo_str_result": "sampleAttributes.geo_str_result",
-    "Sample Attributes.geo_targeted_resequencing": "sampleAttributes.geo_targeted_resequencing",
-    "Sample Attributes.geo_template_type": "sampleAttributes.geo_template_type",
-    "Sample Attributes.geo_tissue_origin": "sampleAttributes.geo_tissue_origin",
-    "Sample Attributes.geo_tissue_preparation": "sampleAttributes.geo_tissue_preparation",
-    "Sample Attributes.geo_tissue_region": "sampleAttributes.geo_tissue_region",
-    "Sample Attributes.geo_tissue_type": "sampleAttributes.geo_tissue_type",
-    "Parent Sample Attributes.geo_external_name": "sampleAttributes.geo_external_name",
-    "Parent Sample Attributes.geo_group_id": "sampleAttributes.geo_group_id",
-    "Parent Sample Attributes.geo_group_id_description": "sampleAttributes.geo_group_id_description",
-    "Parent Sample Attributes.geo_library_source_template_type": "sampleAttributes.geo_library_source_template_type",
-    "Parent Sample Attributes.geo_nanodrop_concentration": "sampleAttributes.geo_nanodrop_concentration",
-    "Parent Sample Attributes.geo_organism": "sampleAttributes.geo_organism",
-    "Parent Sample Attributes.geo_prep_kit": "sampleAttributes.geo_prep_kit",
-    "Parent Sample Attributes.geo_purpose": "sampleAttributes.geo_purpose",
-    "Parent Sample Attributes.geo_qubit_concentration": "sampleAttributes.geo_qubit_concentration",
-    "Parent Sample Attributes.geo_receive_date": "sampleAttributes.geo_receive_date",
-    "Parent Sample Attributes.geo_run_id_and_position": "sampleAttributes.geo_run_id_and_position",
-    "Parent Sample Attributes.geo_str_result": "sampleAttributes.geo_str_result",
-    "Parent Sample Attributes.geo_targeted_resequencing": "sampleAttributes.geo_targeted_resequencing",
-    "Parent Sample Attributes.geo_template_type": "sampleAttributes.geo_template_type",
-    "Parent Sample Attributes.geo_tissue_origin": "sampleAttributes.geo_tissue_origin",
-    "Parent Sample Attributes.geo_tissue_preparation": "sampleAttributes.geo_tissue_preparation",
-    "Parent Sample Attributes.geo_tissue_region": "sampleAttributes.geo_tissue_region",
-    "Parent Sample Attributes.geo_tissue_type": "sampleAttributes.geo_tissue_type",
-    "LIMS Version":"version",
-    "LIMS ID": "provenanceId",
-    "LIMS Last Modified": "lastModified",
-    "LIMS Provider": "provider",
-    "Sequencer Run Attributes.instrument_name":"sequencerRunAttributes.instrument_name",
-    "Sequencer Run Attributes.run_dir":"sequencerRunAttributes.run_dir",
-    "Lane Attributes.pool_name": "laneAttributes.pool_name",
-    "Sample Attributes.institute": "sampleAttributes.institute",
-    "Sample Attributes.subproject": "sampleAttributes.subproject",
-    "Sample Attributes.geo_tube_id": "sampleAttributes.geo_tube_id",
-    "Sequencer Run Attributes.run_bases_mask": "sequencerRunAttributes.run_bases_mask"
-}
-"""
-
-default_sp_ignore_fields = ['skip',
-                            'createdDate']
-
-default_lp_ignore_fields = ['skip',
-                            'createdDate']
-
-default_fp_ignore_fields = ['Sample Attributes.run_yielded_SE_read',
-                            'Sample Attributes.geo_template_id',
-                            'Sample Attributes.geo_tube_id',
-                            'Sample Attributes.geo_run_id_and_position_and_slot',
-                            'Sample Attributes.geo_qpcr_percentage_human',
-                            'Parent Sample Attributes.geo_run_id_and_position_and_slot',
-                            'Parent Sample Attributes.geo_template_id',
-                            'Parent Sample Attributes.run_yielded_SE_read',
-                            'Parent Sample Attributes.geo_qpcr_percentage_human',
-                            'Parent Sample Attributes.geo_reaction_id',
-                            'Parent Sample Attributes.geo_tube_id',
-                            'Sequencer Run Attributes.IndxRd_1',
-                            'Sequencer Run Attributes.geo_instrument_run_id',
-                            'Lane Attributes.geo_lane',
-                            'Study Attributes.geo_lab_group_id',
-                            'Workflow Run Attributes',
-                            'Workflow Attributes',
-                            'Workflow Run SWID',
-                            'Workflow Version',
-                            'File Path',
-                            'Experiment Name',
-                            'File SWID',
-                            'Parent Sample SWID',
-                            'Root Sample SWID',
-                            'Parent Sample Organism IDs',
-                            'Sample Attributes.geo_reaction_id',
-                            'Study SWID',
-                            'Processing SWID',
-                            'Workflow Name',
-                            'Workflow Run Status',
-                            'File Attributes',
-                            'Path Skip',
-                            'File Meta-Type',
-                            'Skip',
-                            'File Size',
-                            'Status',
-                            'Sequencer Run SWID',
-                            'LIMS IUS SWID',
-                            'Processing Algorithm',
-                            'Processing Attributes',
-                            'IUS Attributes',
-                            'Status Reason',
-                            'Sample Organism ID',
-                            'File Md5sum',
-                            'Experiment SWID',
-                            'Lane SWID',
-                            'Processing Status',
-                            'Workflow Run Name',
-                            'Workflow Run Attributes',
-                            'Last Modified',
-                            'Lane Name',
-                            'Experiment Attributes',
-                            'Sample Organism Code',
-                            'IUS SWID',
-                            'Workflow SWID',
-                            'File Description',
-                            'Sample SWID',
-                            'Workflow Run Input File SWAs',
-                            'Sequencer Run Platform ID',
-                            'Sample Attributes.skip',
-                            'Sequencer Run Attributes.skip',
-                            'Parent Sample Attributes.skip',
-                            'Lane Attributes.skip',
-                            'Parent Sample Attributes.subproject',
-                            'Parent Sample Attributes.institute'
-                            ]
-
 
 def get_fp_with_lims_provenance(lane_provenance_file_path,
                                 sample_provenance_file_path,
-                                provider,
+                                provider_id,
                                 file_provenance_file_path,
-                                fp_to_provenance_map=default_fp_to_provenance_map_str,
-                                sp_ignore_fields=default_sp_ignore_fields,
-                                lp_ignore_fields=default_lp_ignore_fields,
-                                fp_ignore_fields=default_fp_ignore_fields):
-    if isinstance(fp_to_provenance_map, str):
-        fp_to_provenance_map = json.loads(fp_to_provenance_map, object_pairs_hook=collections.OrderedDict)
+                                file_to_lims_provenance_mapping_config_file_path=None):
+    if file_to_lims_provenance_mapping_config_file_path is None:
+        file_to_lims_provenance_mapping_config_file_path = pathlib.Path(
+            pkg_resources.resource_filename('resources',
+                                            'default_file_to_lims_provenance_mapping_config.json')).as_uri()
+
+    file_to_lims_provenance_mapping_config = json.load(
+        urllib.request.urlopen(file_to_lims_provenance_mapping_config_file_path))
 
     log.info('Loading data...')
-    lp = lane_provenance.load(lane_provenance_file_path, provider)
-    sp = sample_provenance.load(sample_provenance_file_path, provider)
+    lp = lane_provenance.load(lane_provenance_file_path, provider_id)
+    sp = sample_provenance.load(sample_provenance_file_path, provider_id)
     fp = file_provenance.load(file_provenance_file_path)
 
     # validate that all data fields are mapped or filtered
-    log.info('Validating data...')
+    log.info('Joining file and lims provenance using mapping configuration = {}'.format(
+        file_to_lims_provenance_mapping_config_file_path))
+
+    file_to_lims_provenance_map = file_to_lims_provenance_mapping_config.get('file_to_lims_provenance_mapping')
+    sp_ignore_fields = file_to_lims_provenance_mapping_config.get('sample_provenance_ignore_fields')
+    lp_ignore_fields = file_to_lims_provenance_mapping_config.get('lane_provenance_ignore_fields')
+    fp_ignore_fields = file_to_lims_provenance_mapping_config.get('file_provenance_ignore_fields')
 
     # check for unhandled fields
-    sp_cols_diff = set(sp.columns) - set(fp_to_provenance_map.values()) - set(sp_ignore_fields)
+    sp_cols_diff = set(sp.columns) - set(file_to_lims_provenance_map.values()) - set(sp_ignore_fields)
     if sp_cols_diff:
         raise Exception('Missing sample provenance mapping for: {}'.format(sp_cols_diff))
-    lp_cols_diff = set(lp.columns) - set(fp_to_provenance_map.values()) - set(lp_ignore_fields)
+    lp_cols_diff = set(lp.columns) - set(file_to_lims_provenance_map.values()) - set(lp_ignore_fields)
     if lp_cols_diff:
         raise Exception('Missing lane provenance mapping for: {}'.format(lp_cols_diff))
-    fp_cols_diff = set(fp.columns) - set(fp_to_provenance_map.keys()) - set(fp_ignore_fields)
+    fp_cols_diff = set(fp.columns) - set(file_to_lims_provenance_map.keys()) - set(fp_ignore_fields)
     if fp_cols_diff:
         raise Exception('Missing file provenance mapping for: {}'.format(fp_cols_diff))
 
     # add missing columns to fp that are defined in fp_to_provenance map
-    fp_missing_cols = list(fp_to_provenance_map.keys() - fp.columns)
+    fp_missing_cols = list(file_to_lims_provenance_map.keys() - fp.columns)
     if fp_missing_cols:
-        fp = fp.reindex(columns = fp.columns.tolist() + fp_missing_cols)
-
-    # join fp and sp/lp
-    log.info('Linking data...')
+        fp = fp.reindex(columns=fp.columns.tolist() + fp_missing_cols)
 
     # generate current to new id mapping
-
     is_sample_record = fp['Sequencer Run Name'].notnull() & fp['Lane Number'].notnull() & fp['Sample Name'].notnull() & \
                        fp['Study Title'].notnull()
 
@@ -285,7 +159,8 @@ def generate_workflow_run_hierarchy(fp):
     })
 
     if len(wfr_with_inputs['Workflow Run Input File SWAs'].values) > 0:
-        wfr_file_in['Workflow Run Input File SWAs'] = np.concatenate(wfr_with_inputs['Workflow Run Input File SWAs'].values)
+        wfr_file_in['Workflow Run Input File SWAs'] = np.concatenate(
+            wfr_with_inputs['Workflow Run Input File SWAs'].values)
     else:
         wfr_file_in['Workflow Run Input File SWAs'] = []
 

@@ -1,5 +1,6 @@
 import collections
 import logging
+import timeit
 
 import numpy as np
 import pandas as pd
@@ -70,6 +71,7 @@ fpr_cols = collections.OrderedDict([
 
 
 def load(uri):
+    start_time = timeit.default_timer()
     log.info('Started loading file provenance from {}'.format(uri))
 
     # check if fpr has header
@@ -118,5 +120,8 @@ def load(uri):
 
         attr_df = pd.DataFrame.from_records(col.values, index=col.index)
         fpr = pd.concat([fpr.drop(attr_field, axis=1), attr_df], axis=1)
+
+    log.info(
+        'Completed loading {} file provenance records in {:.1f}s'.format(len(fpr), timeit.default_timer() - start_time))
 
     return fpr

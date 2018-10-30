@@ -20,16 +20,16 @@ class JoinedData(BaseContext):
         self.hierarchy = hierarchy
 
     @classmethod
-    def load_from_files(cls, lane_provenance_path, sample_provenance_path, provider, file_provenance_path):
-        fp_to_provenance_map = utils.analysis.default_fp_to_provenance_map_str
-        if isinstance(fp_to_provenance_map, str):
-            fp_to_provenance_map = json.loads(fp_to_provenance_map, object_pairs_hook=collections.OrderedDict)
+    def load_from_files(cls, lane_provenance_path, sample_provenance_path, provider_id, file_provenance_path):
+        # fp_to_provenance_map = utils.analysis.default_fp_to_provenance_map_str
+        # if isinstance(fp_to_provenance_map, str):
+        #     fp_to_provenance_map = json.loads(fp_to_provenance_map, object_pairs_hook=collections.OrderedDict)
 
         fpr_with_lims_provenance = get_fp_with_lims_provenance(lane_provenance_path,
                                                                sample_provenance_path,
-                                                               provider,
+                                                               provider_id,
                                                                file_provenance_path)
-
+        fp_to_provenance_map = None
         wfr_hierarchy, _ = generate_workflow_run_hierarchy(fpr_with_lims_provenance)
         return cls(fpr_with_lims_provenance, fp_to_provenance_map, wfr_hierarchy)
 

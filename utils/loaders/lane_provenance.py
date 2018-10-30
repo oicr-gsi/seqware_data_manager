@@ -8,7 +8,7 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 
-def load(url, provider) -> pd.DataFrame:
+def load(url, provider_id) -> pd.DataFrame:
     start_time = timeit.default_timer()
     log.info('Started loading lane provenance from {}'.format(url))
     lpj = json.load(urllib.request.urlopen(url))
@@ -16,7 +16,7 @@ def load(url, provider) -> pd.DataFrame:
     lp.createdDate = pd.to_datetime(lp.createdDate)
     lp.lastModified = pd.to_datetime(lp.lastModified)
     lp = lp.rename(columns={'laneProvenanceId': 'provenanceId'})
-    lp['provider'] = provider
+    lp['provider'] = provider_id
 
     # file provenance generation adds underscores
     lp['iusTag'] = 'NoIndex'
