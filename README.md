@@ -8,9 +8,20 @@ A project to collect seqware data management tasks.
 
 # Installation
 ```
+# initialize virtualenv (python 3.6+ is required)
 /usr/bin/python3 -m venv venv
+
+# or specify alternate python3.6+ path
+# /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6 -m venv venv
+
+# activate virtualenv
 source venv/bin/activate
+
+# install dependencies
 pip install -r requirements.txt
+
+# run tests
+python -m pytest
 ```
 
 # General usage
