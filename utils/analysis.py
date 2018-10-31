@@ -14,10 +14,10 @@ from utils.loaders import file_provenance, lane_provenance, sample_provenance
 log = logging.getLogger(__name__)
 
 
-def get_fp_with_lims_provenance(lane_provenance_file_path,
-                                sample_provenance_file_path,
+def get_fp_with_lims_provenance(lane_provenance_url,
+                                sample_provenance_url,
                                 provider_id,
-                                file_provenance_file_path,
+                                file_provenance_url,
                                 file_to_lims_provenance_mapping_config_file_path=None):
     if file_to_lims_provenance_mapping_config_file_path is None:
         file_to_lims_provenance_mapping_config_file_path = pathlib.Path(
@@ -28,9 +28,9 @@ def get_fp_with_lims_provenance(lane_provenance_file_path,
         urllib.request.urlopen(file_to_lims_provenance_mapping_config_file_path))
 
     log.info('Loading data...')
-    lp = lane_provenance.load(lane_provenance_file_path, provider_id)
-    sp = sample_provenance.load(sample_provenance_file_path, provider_id)
-    fp = file_provenance.load(file_provenance_file_path)
+    lp = lane_provenance.load(lane_provenance_url, provider_id)
+    sp = sample_provenance.load(sample_provenance_url, provider_id)
+    fp = file_provenance.load(file_provenance_url)
 
     # validate that all data fields are mapped or filtered
     log.info('Joining file and lims provenance using mapping configuration = {}'.format(

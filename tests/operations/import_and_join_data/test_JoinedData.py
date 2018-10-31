@@ -7,10 +7,10 @@ def test_load_from_files(shared_datadir):
     provider_id = 'lims-provider'
     fp = shared_datadir / 'fpr.tsv'
     ctx = JoinedData.load_from_files(
-        sample_provenance_path=sp.as_uri(),
-        lane_provenance_path=lp.as_uri(),
+        sample_provenance_url=sp.as_uri(),
+        lane_provenance_url=lp.as_uri(),
         provider_id=provider_id,
-        file_provenance_path=fp)
+        file_provenance_url=fp)
 
     assert len(ctx.fpr) == 1
     expected = ['TEST_0001',

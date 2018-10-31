@@ -27,10 +27,10 @@ log = logging.getLogger(__name__)
 if config.data_context_path:
     ctx = JoinedData.load(config.data_context_path)
 else:
-    ctx = JoinedData.load_from_files(sample_provenance_path=config.sample_provenance_url,
-                                     lane_provenance_path=config.lane_provenance_url,
+    ctx = JoinedData.load_from_files(sample_provenance_url=config.sample_provenance_url,
+                                     lane_provenance_url=config.lane_provenance_url,
                                      provider=config.provider,
-                                     file_provenance_path=config.file_provenance_url)
+                                     file_provenance_url=config.file_provenance_url)
 ## filter data
 record_count_before_filtering = len(ctx.fpr)
 ctx = ctx.apply_include_filters(config.include_filters)

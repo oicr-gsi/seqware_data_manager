@@ -70,18 +70,18 @@ fpr_cols = collections.OrderedDict([
     ('LIMS Last Modified', 'object')])
 
 
-def load(uri):
+def load(file_provenance_url):
     start_time = timeit.default_timer()
-    log.info('Started loading file provenance from {}'.format(uri))
+    log.info('Started loading file provenance from {}'.format(file_provenance_url))
 
     # check if fpr has header
-    first_record = pd.read_csv(getpath(uri), delimiter='\t', nrows=1, header=None)
+    first_record = pd.read_csv(getpath(file_provenance_url), delimiter='\t', nrows=1, header=None)
     if first_record.iloc[0, 0] == 'Last Modified':
         header_mode = 0
     else:
         header_mode = None
 
-    fpr = pd.read_csv(uri, delimiter='\t', names=fpr_cols.keys(), dtype=fpr_cols, header=header_mode, low_memory=False)
+    fpr = pd.read_csv(file_provenance_url, delimiter='\t', names=fpr_cols.keys(), dtype=fpr_cols, header=header_mode, low_memory=False)
 
     fpr['LIMS Last Modified'] = pd.to_datetime(fpr['LIMS Last Modified'])
     z = fpr.loc[fpr['Workflow Run Input File SWAs'].notnull(),
