@@ -5,7 +5,7 @@ from utils.loaders import sample_provenance
 
 
 def test_load(shared_datadir):
-    fpr = sample_provenance.load((shared_datadir / 'sp.json').as_uri(), provider='lims-provider')  # type:pd.DataFrame
+    fpr = sample_provenance.load((shared_datadir / 'sp.json').as_uri(), provider_id='lims-provider')  # type:pd.DataFrame
     assert len(fpr) == 1
 
 

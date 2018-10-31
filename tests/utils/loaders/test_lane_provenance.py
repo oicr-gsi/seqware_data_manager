@@ -5,7 +5,7 @@ from utils.loaders import lane_provenance
 
 
 def test_load(shared_datadir):
-    fpr = lane_provenance.load((shared_datadir / 'lp.json').as_uri(), provider='lims-provider')  # type:pd.DataFrame
+    fpr = lane_provenance.load((shared_datadir / 'lp.json').as_uri(), provider_id='lims-provider')  # type:pd.DataFrame
     assert len(fpr) == 1
 
 
