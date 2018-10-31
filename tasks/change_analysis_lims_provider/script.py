@@ -29,7 +29,7 @@ if config.data_context_path:
 else:
     ctx = JoinedData.load_from_files(sample_provenance_url=config.sample_provenance_url,
                                      lane_provenance_url=config.lane_provenance_url,
-                                     provider=config.provider,
+                                     provider_id=config.provider_id,
                                      file_provenance_url=config.file_provenance_url)
 ## filter data
 record_count_before_filtering = len(ctx.fpr)

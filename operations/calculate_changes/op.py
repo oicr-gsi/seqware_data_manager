@@ -22,7 +22,7 @@ class JoinedDataChangeSet(BaseContext):
 
     @classmethod
     def generate_changes(cls, ctx: JoinedData):
-        fp_to_provenance_map = ctx.fp_to_provenance_map
+        fp_to_provenance_map = ctx.file_to_lims_provenance_map
 
         changes = pd.DataFrame(columns=['field', 'from', 'to'])
         for from_field, to_field in fp_to_provenance_map.items():

@@ -143,7 +143,7 @@ def get_fp_with_lims_provenance(lane_provenance_url,
     if len(fp_no_match) + len(fp_with_lims_provenance) != len(fp):
         raise Exception('')
 
-    return fp_with_lims_provenance
+    return fp_with_lims_provenance, file_to_lims_provenance_map
 
 
 def generate_workflow_run_hierarchy(fp):
