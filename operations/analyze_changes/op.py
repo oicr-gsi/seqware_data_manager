@@ -1,12 +1,12 @@
-import json
 import timeit
 
 import pandas as pd
 
+import utils.config
 from models.context import BaseContext
 from operations.analyze_changes.reports.change_summary import generate_change_summary_report
 from operations.calculate_changes import JoinedDataChangeSet
-from utils.file import getpath, get_file_path
+from utils.file import get_file_path
 
 
 class AnalyzedChangeSet(BaseContext):
@@ -50,8 +50,8 @@ class AnalyzedChangeSet(BaseContext):
         cls._log.info('Applying change_filters from {}'.format(rules_config_path))
         start_time = timeit.default_timer()
 
-        # allowed_rules_mask = False
-        rules_config = json.load(getpath(rules_config_path).open())
+        rules_config = utils.config.load_json_config(rules_config_path)
+
         allowed_mask = cls.apply_rules(ctx.fpr, ctx.changes, rules_config)
         changes_allowed = ctx.changes[allowed_mask]
         changes_blocked = ctx.changes[~allowed_mask]

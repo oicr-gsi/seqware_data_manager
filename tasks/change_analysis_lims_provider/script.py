@@ -21,7 +21,8 @@ log = logging.getLogger(__name__)
 
 ## validate input
 #
-
+# check output dir exists and is writable
+# check config files are the correct format
 
 ## load data
 if config.data_context_path:

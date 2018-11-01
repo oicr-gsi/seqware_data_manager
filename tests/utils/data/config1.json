@@ -1,0 +1,7 @@
+{
+  "file": "${base}/test1.file",
+  "file2": "${base}/test2.file",
+  "object": {
+    "file": "${base}/test3.file"
+  }
+}
