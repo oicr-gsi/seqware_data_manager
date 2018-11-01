@@ -1,7 +1,6 @@
 import logging
 import sys
 
-import tasks.load_analysis_lims_data.config as config
 from operations.import_and_join_data import JoinedData
 
 
@@ -20,11 +19,12 @@ def load_analysis_lims_data(*, output_path: str,
     :param file_provenance_url: current file provenance path
     """
 
-    config.log_level = 'INFO'
+    log_level = 'INFO'
     logging.basicConfig(
-        level=logging.getLevelName(config.log_level),
-        format="[%(asctime)s] %(levelname)s %(message)s",
-        datefmt="%H:%M:%S", stream=sys.stdout)
+        level=logging.getLevelName(log_level),
+        format='[%(asctime)s] %(levelname)s %(message)s',
+        datefmt='%H:%M:%S',
+        stream=sys.stdout)
 
     ctx = JoinedData.load_from_files(lane_provenance_url=lane_provenance_url,
                                      sample_provenance_url=sample_provenance_url,
