@@ -18,24 +18,29 @@ def get_fp_with_lims_provenance(lane_provenance_url,
                                 sample_provenance_url,
                                 provider_id,
                                 file_provenance_url,
-                                file_to_lims_provenance_mapping_config_file_path=None):
+                                file_to_lims_provenance_mapping_config_file_path=None,
+                                id_map_url=None):
+    log.info('Loading data...')
+
     if file_to_lims_provenance_mapping_config_file_path is None:
         file_to_lims_provenance_mapping_config_file_path = pathlib.Path(
             pkg_resources.resource_filename('resources',
                                             'default_file_to_lims_provenance_mapping_config.json')).as_uri()
-
     file_to_lims_provenance_mapping_config = json.load(
         urllib.request.urlopen(file_to_lims_provenance_mapping_config_file_path))
+    log.info('Joining file and lims provenance using mapping configuration = {}'.format(
+        file_to_lims_provenance_mapping_config_file_path))
 
-    log.info('Loading data...')
+    user_provided_id_map = None
+    if id_map_url is not None:
+        log.info('Using provided id map to map records = {}'.format(id_map_url))
+        user_provided_id_map = pd.read_csv(id_map_url, dtype=object)
+
     lp = lane_provenance.load(lane_provenance_url, provider_id)
     sp = sample_provenance.load(sample_provenance_url, provider_id)
     fp = file_provenance.load(file_provenance_url)
 
     # validate that all data fields are mapped or filtered
-    log.info('Joining file and lims provenance using mapping configuration = {}'.format(
-        file_to_lims_provenance_mapping_config_file_path))
-
     file_to_lims_provenance_map = file_to_lims_provenance_mapping_config.get('file_to_lims_provenance_mapping')
     sp_ignore_fields = file_to_lims_provenance_mapping_config.get('sample_provenance_ignore_fields')
     lp_ignore_fields = file_to_lims_provenance_mapping_config.get('lane_provenance_ignore_fields')
@@ -84,7 +89,9 @@ def get_fp_with_lims_provenance(lane_provenance_url,
     id_map = fp.loc[:, ['LIMS Provider', 'LIMS ID']]
     id_map['provenanceId'] = np.nan
 
-    # if has_missing(id_map, 'provenanceId'):
+    if user_provided_id_map is not None:
+        id_map = utils.transformations.merge_id_map(id_map, user_provided_id_map, ['LIMS Provider', 'LIMS ID'])
+
     if any(id_map['provenanceId'].isnull()):
         from_fields = ['LIMS Provider', 'LIMS ID']
         to_fields = ['provider', 'provenanceId']
