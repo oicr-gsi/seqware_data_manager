@@ -95,7 +95,9 @@ def load(file_provenance_url):
     # remove records that do not have status = OKAY
     # need historical provenance data to be able to correct these records
     fpr_status_not_okay = fpr.loc[fpr['Status'] != 'OKAY']
-    fpr.drop(fpr_status_not_okay.index, inplace=True)
+    if len(fpr_status_not_okay) > 0:
+        fpr.drop(fpr_status_not_okay.index, inplace=True)
+        log.warning('Dropped {} file provenance records due to Status != OKAY'.format(len(fpr_status_not_okay)))
 
     def string_to_dict(x, prefix=''):
         d = {}
