@@ -1,9 +1,10 @@
 import numpy as np
+import pandas as pd
 
 
 def string_match(df, col, pattern):
     if pattern == '*':
-        return True
+        return pd.Series(True, index=df.index, name=col)
     elif pattern == '' or (type(pattern) == float and np.isnan(pattern)):
         return df[col].isnull() | (df[col] == '');
     elif pattern.startswith('^') and pattern.endswith('$'):

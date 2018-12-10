@@ -29,7 +29,9 @@ def filter_changes(fpr, changes, filters_csv_file):
 def generic_filter_changes(fpr, changes, filters_csv_file=None, filters=None):
     if filters_csv_file:
         filters = pd.read_csv(getpath(filters_csv_file))  # type: pd.DataFrame
-    elif filters:
+    elif filters and type(filters) == dict:
+        filters = pd.DataFrame([filters])  # type: pd.DataFrame
+    elif filters and type(filters) == list:
         filters = pd.DataFrame(filters)  # type: pd.DataFrame
     else:
         raise Exception('No filters provided')
@@ -47,7 +49,8 @@ def generic_filter_changes(fpr, changes, filters_csv_file=None, filters=None):
     for i, rule in filters.iterrows():
         current_mask = True
         for filter_column in filter_columns:
-            current_mask = current_mask & changes.index.isin(fpr.loc[fpr[filter_column] == rule[filter_column]].index)
+            current_mask = current_mask & \
+                           changes.index.isin(utils.logic.string_match(fpr, filter_column, rule[filter_column]).index)
         for required_column in required_columns:
             current_mask = current_mask & utils.logic.string_match(changes, required_column, rule[required_column])
         mask = mask | current_mask
