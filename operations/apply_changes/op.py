@@ -95,7 +95,7 @@ class UpdateRecords(BaseContext):
             lk.provider = clk.lims_provider AND 
             lk.id = clk.lims_id AND 
             lk.version = clk.lims_version AND 
-            (lk.last_modified AT TIME ZONE 'UTC') = (clk.lims_last_modified AT TIME ZONE 'UTC') AND 
+            (lk.last_modified AT TIME ZONE 'UTC') = clk.lims_last_modified AND 
             i.sw_accession = nlk.lims_ius_swid 
             RETURNING lk.*) 
             SELECT * INTO temporary table updated_lims_keys FROM tmp;\n\n"""
