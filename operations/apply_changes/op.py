@@ -87,7 +87,7 @@ class UpdateRecords(BaseContext):
             SET provider = nlk.lims_provider, 
             id = nlk.lims_id,
             version = nlk.lims_version,
-            last_modified = nlk.lims_last_modified,
+            last_modified = (nlk.lims_last_modified AT TIME ZONE 'UTC'),
             update_tstmp = now()
             FROM ius i, current_lims_keys clk, new_lims_keys nlk 
             WHERE i.lims_key_id = lk.lims_key_id AND 
