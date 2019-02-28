@@ -18,18 +18,18 @@ def get_fp_with_lims_provenance(lane_provenance_url,
                                 sample_provenance_url,
                                 provider_id,
                                 file_provenance_url,
-                                file_to_lims_provenance_mapping_config_file_path=None,
+                                file_to_lims_provenance_mapping_url=None,
                                 id_map_url=None):
     log.info('Loading data...')
 
-    if file_to_lims_provenance_mapping_config_file_path is None:
-        file_to_lims_provenance_mapping_config_file_path = pathlib.Path(
+    if file_to_lims_provenance_mapping_url is None:
+        file_to_lims_provenance_mapping_url = pathlib.Path(
             pkg_resources.resource_filename('resources',
                                             'default_file_to_lims_provenance_mapping_config.json')).as_uri()
     file_to_lims_provenance_mapping_config = json.load(
-        urllib.request.urlopen(file_to_lims_provenance_mapping_config_file_path))
+        urllib.request.urlopen(file_to_lims_provenance_mapping_url))
     log.info('Joining file and lims provenance using mapping configuration = {}'.format(
-        file_to_lims_provenance_mapping_config_file_path))
+        file_to_lims_provenance_mapping_url))
 
     user_provided_id_map = None
     if id_map_url is not None:
