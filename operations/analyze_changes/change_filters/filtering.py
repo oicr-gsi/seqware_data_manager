@@ -26,24 +26,22 @@ def filter_changes(fpr, changes, filters_csv_file):
     return mask
 
 
-def generic_filter_changes(fpr, changes, filters_csv_file=None, filters=None):
-    if filters_csv_file:
-        filters = pd.read_csv(getpath(filters_csv_file))  # type: pd.DataFrame
-    elif filters and type(filters) == dict:
+def generic_filter_changes(fpr, changes, filters=None):
+    if filters and type(filters) == dict:
         filters = pd.DataFrame([filters])  # type: pd.DataFrame
     elif filters and type(filters) == list:
         filters = pd.DataFrame(filters)  # type: pd.DataFrame
     else:
         raise Exception('No filters provided')
 
-    required_columns = {'field', 'from', 'to'}
-    if not required_columns.issubset(filters.columns):
-        raise Exception('Required columns not found')
+    required_fields = {'field', 'from', 'to'}
+    if not required_fields.issubset(filters.columns):
+        raise Exception(f'Required fields not found: {",".join(required_fields - set(filters.columns))}')
 
-    filter_columns = set(filters.columns) - set(required_columns)  # type:set
+    filter_columns = set(filters.columns) - set(required_fields)  # type:set
     if not filter_columns.issubset(fpr.columns):
         missing_filter_columns = set(filter_columns) - set(fpr.columns)
-        raise Exception('The following filter columns are missing: ' + missing_filter_columns)
+        raise Exception('The following filter columns are missing: ' + ','.join(missing_filter_columns))
 
     mask = False
     for i, rule in filters.iterrows():
@@ -51,7 +49,7 @@ def generic_filter_changes(fpr, changes, filters_csv_file=None, filters=None):
         for filter_column in filter_columns:
             current_mask = current_mask & \
                            changes.index.isin(utils.logic.string_match(fpr, filter_column, rule[filter_column]).index)
-        for required_column in required_columns:
+        for required_column in required_fields:
             current_mask = current_mask & utils.logic.string_match(changes, required_column, rule[required_column])
         mask = mask | current_mask
     return mask
