@@ -9,6 +9,7 @@ def load_analysis_lims_data(*, output_path: str,
                             lane_provenance_url: str,
                             provider_id: str,
                             file_provenance_url: str,
+                            file_to_lims_provenance_mapping_url: str = None,
                             id_map_url: str = None):
     """
     Task to extract and export analysis and lims data to a file
@@ -18,6 +19,7 @@ def load_analysis_lims_data(*, output_path: str,
     :param lane_provenance_url: new lims lane provenance data source url
     :param provider_id: new lims provider id
     :param file_provenance_url: current file provenance path
+    :param file_to_lims_provenance_mapping_url: mapping of file to lims provenance fields and attributes configuration
     :param id_map_url: csv file with mapping of current LIMS provider + ID to new ID.  CSV format: LIMS Provider,LIMS ID,provenanceId
     """
 
@@ -32,5 +34,6 @@ def load_analysis_lims_data(*, output_path: str,
                                      sample_provenance_url=sample_provenance_url,
                                      provider_id=provider_id,
                                      file_provenance_url=file_provenance_url,
+                                     file_to_lims_provenance_mapping_url=file_to_lims_provenance_mapping_url,
                                      id_map_url=id_map_url)
     ctx.save(output_path)

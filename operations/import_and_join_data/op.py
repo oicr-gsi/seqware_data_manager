@@ -17,11 +17,13 @@ class JoinedData(BaseContext):
         self.hierarchy = hierarchy
 
     @classmethod
-    def load_from_files(cls, lane_provenance_url, sample_provenance_url, provider_id, file_provenance_url, id_map_url=None):
+    def load_from_files(cls, lane_provenance_url, sample_provenance_url, provider_id, file_provenance_url,
+                        file_to_lims_provenance_mapping_url=None, id_map_url=None):
         fpr_with_lims_provenance, file_to_lims_provenance_map = get_fp_with_lims_provenance(lane_provenance_url,
                                                                                             sample_provenance_url,
                                                                                             provider_id,
                                                                                             file_provenance_url,
+                                                                                            file_to_lims_provenance_mapping_url=file_to_lims_provenance_mapping_url,
                                                                                             id_map_url=id_map_url)
         wfr_hierarchy, _ = generate_workflow_run_hierarchy(fpr_with_lims_provenance)
         return cls(fpr_with_lims_provenance, file_to_lims_provenance_map, wfr_hierarchy)

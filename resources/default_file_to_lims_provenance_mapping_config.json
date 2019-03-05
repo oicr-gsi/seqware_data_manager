@@ -129,6 +129,7 @@
     "Sample Attributes.institute": "sampleAttributes.institute",
     "Sample Attributes.subproject": "sampleAttributes.subproject",
     "Sample Attributes.geo_tube_id": "sampleAttributes.geo_tube_id",
-    "Sequencer Run Attributes.run_bases_mask": "sequencerRunAttributes.run_bases_mask"
+    "Sequencer Run Attributes.run_bases_mask": "sequencerRunAttributes.run_bases_mask",
+    "Sequencer Run Attributes.sequencing_parameters": "sequencerRunAttributes.sequencing_parameters"
   }
 }
