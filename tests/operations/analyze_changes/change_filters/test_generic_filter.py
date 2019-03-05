@@ -14,6 +14,6 @@ def test_generic_filter_changes(shared_datadir):
               'from': 'abc',
               'to': 'ABC'}
     actual = filters.generic_filter_changes(data, changes, filters=filter)
-    expected = pd.Series(data=[True, False, True, False, False, False],
-                         index=pd.Int64Index([0, 0, 1, 1, 2, 2], name ='index'))
+    expected = pd.Series(data=[True, False, True, False, False, False, False],
+                         index=pd.Int64Index([0, 0, 1, 1, 2, 2, 3], name ='index'))
     assert_series_equal(actual, expected)

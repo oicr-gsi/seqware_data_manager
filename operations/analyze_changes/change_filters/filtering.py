@@ -55,3 +55,48 @@ def generic_filter_changes(fpr, changes, filters_csv_file=None, filters=None):
             current_mask = current_mask & utils.logic.string_match(changes, required_column, rule[required_column])
         mask = mask | current_mask
     return mask
+
+
+def character_replace_check_equality(fpr, changes, config=None):
+    if config and type(config) == dict:
+        config = pd.DataFrame([config])  # type: pd.DataFrame
+    elif config and type(config) == list:
+        config = pd.DataFrame(config)  # type: pd.DataFrame
+    else:
+        raise Exception('No config provided')
+
+    config_fields = {'field', 'from_characters_regex', 'to_characters_regex', 'replace_with_character'}
+    required_config_fields = {'field', 'replace_with_character'}
+    if not required_config_fields.issubset(config.columns):
+        raise Exception(f'Required config fields not found: {",".join(required_config_fields - set(config.columns))}')
+
+    filter_columns = set(config.columns) - set(config_fields)  # type:set
+    if not filter_columns.issubset(fpr.columns):
+        missing_filter_columns = set(filter_columns) - set(fpr.columns)
+        raise Exception('The following filter columns are missing: ' + ','.join(missing_filter_columns))
+
+    mask = False
+    for i, rule in config.iterrows():
+        current_mask = True
+        for filter_column in filter_columns:
+            current_mask = current_mask & \
+                           changes.index.isin(utils.logic.string_match(fpr, filter_column, rule[filter_column]).index)
+
+        if 'from_characters_regex' in rule:
+            from_values = changes['from'].str.replace(
+                rule['from_characters_regex'], rule['replace_with_character'], regex=True)
+        else:
+            from_values = changes['from']
+
+        if 'to_characters_regex' in rule:
+            to_values = changes['to'].str.replace(
+                rule['to_characters_regex'], rule['replace_with_character'], regex=True)
+        else:
+            to_values = changes['to']
+
+        current_mask = current_mask & \
+                       utils.logic.string_match(changes, 'field', rule['field']) & (from_values == to_values)
+
+        mask = mask | current_mask
+
+    return mask
