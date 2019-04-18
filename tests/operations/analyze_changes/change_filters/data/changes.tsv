@@ -1,8 +1,16 @@
 index	field	from	to
 0	Study Title	abc	ABC
 0	Other	a	A
+0	New Field		new data
+0	Old Field	to_delete
 1	Study Title	abc	ABC
 1	Other	b	B
+1	New Field		new data
+1	Old Field	to_delete
 2	Study Title	xyz	XYZ
 2	Other	c	C
+2	New Field		new data
+2	Old Field	to_delete
 3	Other	A⌀B	A&B
+3	New Field		new data
+3	Old Field	to_delete

@@ -13,6 +13,12 @@ def test_character_replace_check_equality(shared_datadir):
               'to_characters_regex': '[;=&]',
               'replace_with_character': '⌀'}
     actual = filters.character_replace_check_equality(data, changes, config=config)
-    expected = pd.Series(data=[False, False, False, False, False, False, True],
-                         index=pd.Int64Index([0, 0, 1, 1, 2, 2, 3], name='index'))
+    expected = pd.Series(data=[False, False, False, False,
+                               False, False, False, False,
+                               False, False, False, False,
+                               True, False, False],
+                         index=pd.Int64Index([0, 0, 0, 0,
+                                              1, 1, 1, 1,
+                                              2, 2, 2, 2,
+                                              3, 3, 3], name='index'))
     assert_series_equal(actual, expected)
