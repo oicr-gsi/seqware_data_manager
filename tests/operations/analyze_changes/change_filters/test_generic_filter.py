@@ -39,7 +39,10 @@ def test_generic_filter_okay_regex(shared_datadir):
                                True, False, False, False,
                                False, False, False, False,
                                False, False, False],
-                         index=pd.Int64Index([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3], name='index'))
+                         index=pd.Int64Index([0, 0, 0, 0,
+                                              1, 1, 1, 1,
+                                              2, 2, 2, 2,
+                                              3, 3, 3], name='index'))
     assert_series_equal(actual, expected)
 
 
