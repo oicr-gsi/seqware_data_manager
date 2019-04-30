@@ -47,8 +47,20 @@ def generic_filter_changes(fpr, changes, filters=None):
     for i, rule in filters.iterrows():
         current_mask = True
         for filter_column in filter_columns:
-            current_mask = current_mask & \
-                           changes.index.isin(utils.logic.string_match(fpr, filter_column, rule[filter_column]).index)
+            if type(rule[filter_column]) is str:
+                matches = utils.logic.string_match(fpr, filter_column, rule[filter_column])
+                new_mask = changes.index.isin(matches[matches].index)
+                current_mask = current_mask & new_mask
+            elif type(rule[filter_column]) is list:
+                field_mask = False
+                for filter_value in rule[filter_column]:
+                    matches = utils.logic.string_match(fpr, filter_column, filter_value)
+                    new_mask = changes.index.isin(matches[matches].index)
+                    field_mask = field_mask | new_mask
+                current_mask = current_mask & field_mask
+            else:
+                raise Exception(
+                    f"Unsupported filter type = {type(rule[filter_column])} for rule filter {filter_column}")
         for required_column in required_fields:
             current_mask = current_mask & utils.logic.string_match(changes, required_column, rule[required_column])
         mask = mask | current_mask

@@ -18,6 +18,5 @@ def test_wildcard(shared_datadir):
 
 def test_regex(shared_datadir):
     df = pd.read_csv(shared_datadir / 'data.tsv')
-    x = string_match(df, 'Sample Name', '^.*_1$')
     assert_series_equal(string_match(df, 'Sample Name', '^.*_1$'),
                         pd.Series(name='Sample Name', data=[True, False, True, True]))
